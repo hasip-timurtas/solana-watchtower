@@ -9,6 +9,10 @@ pub enum NotifierError {
     #[error("Email sending failed: {0}")]
     Email(#[from] lettre::error::Error),
 
+    /// Email address parsing error
+    #[error("Email address parsing failed: {0}")]
+    EmailAddress(#[from] lettre::address::AddressError),
+
     /// HTTP request error
     #[error("HTTP request failed: {0}")]
     Http(#[from] reqwest::Error),

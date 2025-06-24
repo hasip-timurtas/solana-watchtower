@@ -10,6 +10,7 @@ description = "Rule engine and metrics aggregator for Solana program monitoring"
 
 [dependencies]
 # Workspace dependencies
+watchtower-subscriber = { path = "../subscriber" }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

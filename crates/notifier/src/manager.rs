@@ -88,7 +88,8 @@ impl NotificationManager {
             channels.insert("email".to_string(), Box::new(channel));
             
             let rate_limiter = RateLimiter::direct(Quota::per_minute(
-                nonzero!(config.rate_limiting.max_messages_per_minute)
+                std::num::NonZeroU32::new(config.rate_limiting.max_messages_per_minute)
+                    .unwrap_or(std::num::NonZeroU32::new(60).unwrap())
             ));
             rate_limiters.insert("email".to_string(), rate_limiter);
         }
@@ -99,7 +100,8 @@ impl NotificationManager {
             channels.insert("telegram".to_string(), Box::new(channel));
             
             let rate_limiter = RateLimiter::direct(Quota::per_minute(
-                nonzero!(config.rate_limiting.max_messages_per_minute)
+                std::num::NonZeroU32::new(config.rate_limiting.max_messages_per_minute)
+                    .unwrap_or(std::num::NonZeroU32::new(60).unwrap())
             ));
             rate_limiters.insert("telegram".to_string(), rate_limiter);
         }
@@ -110,7 +112,8 @@ impl NotificationManager {
             channels.insert("slack".to_string(), Box::new(channel));
             
             let rate_limiter = RateLimiter::direct(Quota::per_minute(
-                nonzero!(config.rate_limiting.max_messages_per_minute)
+                std::num::NonZeroU32::new(config.rate_limiting.max_messages_per_minute)
+                    .unwrap_or(std::num::NonZeroU32::new(60).unwrap())
             ));
             rate_limiters.insert("slack".to_string(), rate_limiter);
         }
@@ -121,7 +124,8 @@ impl NotificationManager {
             channels.insert("discord".to_string(), Box::new(channel));
             
             let rate_limiter = RateLimiter::direct(Quota::per_minute(
-                nonzero!(config.rate_limiting.max_messages_per_minute)
+                std::num::NonZeroU32::new(config.rate_limiting.max_messages_per_minute)
+                    .unwrap_or(std::num::NonZeroU32::new(60).unwrap())
             ));
             rate_limiters.insert("discord".to_string(), rate_limiter);
         }

@@ -9,11 +9,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::net::TcpListener;
-use tower::ServiceBuilder;
+use tower::{ServiceBuilder, timeout::TimeoutLayer};
 use tower_http::{
     cors::CorsLayer,
     services::{ServeDir, ServeFile},
-    timeout::TimeoutLayer,
 };
 use tracing::{info, warn};
 use watchtower_engine::{AlertManager, MonitoringEngine, MetricsCollector};

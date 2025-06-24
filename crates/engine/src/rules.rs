@@ -5,7 +5,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
-use uuid::Uuid;
 
 /// Trait for implementing monitoring rules.
 #[async_trait]
@@ -329,7 +328,7 @@ impl Rule for OracleDeviationRule {
         
         // Check for oracle price updates in the event
         if let Some(oracle_price) = event.metadata.get("oracle_price") {
-            if let Some(serde_json::Value::Number(price)) = oracle_price {
+            if let serde_json::Value::Number(price) = oracle_price {
                 if let Some(reference_price) = context.metrics.get(&self.reference_oracle) {
                     let price_val = price.as_f64().unwrap_or(0.0);
                     let deviation_pct = ((price_val - reference_price).abs() / reference_price) * 100.0;

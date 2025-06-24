@@ -10,6 +10,7 @@ description = "Multi-channel notification system for Solana monitoring alerts"
 
 [dependencies]
 # Workspace dependencies
+watchtower-engine = { path = "../engine" }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -18,7 +19,10 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 chrono = { workspace = true }
 reqwest = { workspace = true }
-lettre = { workspace = true }
+lettre = { workspace = true, features = ["tokio1", "smtp-transport", "tokio1-native-tls"] }
+
+# Solana dependencies
+solana-sdk = { workspace = true }
 
 # Additional dependencies
 async-trait = "0.1"

@@ -2537,11 +2537,13 @@ version = "0.11.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb2a0354e9ece2fcdcf9fa53417f6de587230c0c248068eb058fa26c4a753179"
 dependencies = [
+ "async-trait",
  "base64 0.22.1",
  "chumsky",
  "email-encoding",
  "email_address",
  "fastrand",
+ "futures-io",
  "futures-util",
  "hostname",
  "httpdate",
@@ -2553,6 +2555,7 @@ dependencies = [
  "quoted_printable",
  "socket2",
  "tokio",
+ "tokio-native-tls",
  "url",
 ]
 
@@ -5765,6 +5768,8 @@ version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
 dependencies = [
+ "pin-project-lite",
+ "tokio",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -6113,6 +6118,7 @@ dependencies = [
  "form_urlencoded",
  "idna 1.0.3",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]
@@ -6398,6 +6404,7 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+ "watchtower-subscriber",
 ]
 
 [[package]]
@@ -6413,10 +6420,12 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "solana-sdk",
  "tera",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
+ "watchtower-engine",
 ]
 
 [[package]]
@@ -6440,6 +6449,7 @@ dependencies = [
  "tokio-tungstenite 0.21.0",
  "tracing",
  "url",
+ "uuid",
 ]
 
 [[package]]

@@ -66,13 +66,13 @@ pub enum EventType {
 }
 
 /// Event-specific data payload.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "data_type")]
 pub enum EventData {
     /// Transaction data
     Transaction {
-        /// Full transaction details
-        transaction: Box<EncodedConfirmedTransactionWithStatusMeta>,
+        /// Transaction signature for reference
+        signature: Signature,
         /// Success status
         success: bool,
         /// Compute units consumed
@@ -138,6 +138,60 @@ pub enum EventData {
         /// Arbitrary data
         data: serde_json::Value,
     },
+}
+
+impl Clone for EventData {
+    fn clone(&self) -> Self {
+        match self {
+            EventData::Transaction { signature, success, compute_units, fee } => {
+                EventData::Transaction {
+                    signature: *signature,
+                    success: *success,
+                    compute_units: *compute_units,
+                    fee: *fee,
+                }
+            }
+            EventData::AccountChange { account, balance_before, balance_after, data_size_change, owner } => {
+                EventData::AccountChange {
+                    account: *account,
+                    balance_before: *balance_before,
+                    balance_after: *balance_after,
+                    data_size_change: *data_size_change,
+                    owner: *owner,
+                }
+            }
+            EventData::LogEntry { message, level, instruction_index } => {
+                EventData::LogEntry {
+                    message: message.clone(),
+                    level: level.clone(),
+                    instruction_index: *instruction_index,
+                }
+            }
+            EventData::Instruction { index, data, accounts, success } => {
+                EventData::Instruction {
+                    index: *index,
+                    data: data.clone(),
+                    accounts: accounts.clone(),
+                    success: *success,
+                }
+            }
+            EventData::TokenTransfer { from, to, amount, mint, decimals } => {
+                EventData::TokenTransfer {
+                    from: *from,
+                    to: *to,
+                    amount: *amount,
+                    mint: *mint,
+                    decimals: *decimals,
+                }
+            }
+            EventData::Custom { name, data } => {
+                EventData::Custom {
+                    name: name.clone(),
+                    data: data.clone(),
+                }
+            }
+        }
+    }
 }
 
 /// Log level for program logs.
@@ -211,10 +265,10 @@ impl ProgramEvent {
         matches!(self.event_type, EventType::LogEntry)
     }
     
-    /// Get transaction data if this is a transaction event.
-    pub fn transaction_data(&self) -> Option<&EncodedConfirmedTransactionWithStatusMeta> {
+    /// Get transaction signature if this is a transaction event.
+    pub fn transaction_signature(&self) -> Option<&Signature> {
         match &self.data {
-            EventData::Transaction { transaction, .. } => Some(transaction),
+            EventData::Transaction { signature, .. } => Some(signature),
             _ => None,
         }
     }

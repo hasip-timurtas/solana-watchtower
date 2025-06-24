@@ -24,7 +24,7 @@ watchtower-engine = { path = "../engine" }
 
 # Web framework dependencies
 axum = { version = "0.7", features = ["ws"] }
-tower = "0.4"
+tower = { version = "0.4", features = ["timeout"] }
 tower-http = { version = "0.5", features = ["cors", "fs"] }
 hyper = "1.0"
 futures = "0.3"

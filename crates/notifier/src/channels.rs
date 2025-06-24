@@ -235,9 +235,7 @@ impl NotificationChannel for TelegramChannel {
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
-            return Err(NotifierError::Http(reqwest::Error::from(
-                std::io::Error::new(std::io::ErrorKind::Other, error_text)
-            )));
+            return Err(NotifierError::Generic(format!("Telegram API error: {}", error_text)));
         }
 
         info!("Telegram message sent successfully");
