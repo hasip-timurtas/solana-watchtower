@@ -63,4 +63,4 @@ pub enum NotifierError {
 }
 
 /// Result type for notifier operations.
-pub type NotifierResult<T> = Result<T, NotifierError>; 
+pub type NotifierResult<T> = Result<T, NotifierError>;

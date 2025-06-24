@@ -168,4 +168,4 @@ fn print_banner() {
         style("   Real-time monitoring for Solana programs").dim()
     );
     println!();
-} 
+}

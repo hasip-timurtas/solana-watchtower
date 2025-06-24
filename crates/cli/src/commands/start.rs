@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::signal;
 use tracing::{error, info, warn};
-use watchtower_engine::{MonitoringEngine, AlertManager, MetricsCollector};
+use watchtower_engine::{AlertManager, MetricsCollector, MonitoringEngine};
 use watchtower_notifier::NotificationManager;
 use watchtower_subscriber::SolanaWebSocketClient;
 
@@ -35,28 +35,23 @@ pub async fn start_command(
     println!("{}", style("Initializing monitoring components...").cyan());
 
     // Create metrics collector
-    let metrics = Arc::new(
-        MetricsCollector::new()
-            .context("Failed to create metrics collector")?
-    );
+    let metrics = Arc::new(MetricsCollector::new().context("Failed to create metrics collector")?);
 
     // Create alert manager
     let alert_manager = Arc::new(AlertManager::new());
 
     // Create monitoring engine
-    let engine = Arc::new(
-        MonitoringEngine::new(
-            metrics.clone(),
-            alert_manager.clone(),
-            config.engine.clone(),
-        )
-    );
+    let engine = Arc::new(MonitoringEngine::new(
+        metrics.clone(),
+        alert_manager.clone(),
+        config.engine.clone(),
+    ));
 
     // Create notification manager
     let notification_manager = Arc::new(
         NotificationManager::new(config.notifier.clone())
             .await
-            .context("Failed to create notification manager")?
+            .context("Failed to create notification manager")?,
     );
 
     // Create WebSocket subscriber
@@ -69,11 +64,16 @@ pub async fn start_command(
     register_builtin_rules(&engine).await?;
 
     // Start the monitoring engine
-    engine.start().await.context("Failed to start monitoring engine")?;
+    engine
+        .start()
+        .await
+        .context("Failed to start monitoring engine")?;
     println!("{}", style("✓ Monitoring engine started").green());
 
     // Start the subscriber and get event receiver
-    let mut event_receiver = subscriber.start().await
+    let mut event_receiver = subscriber
+        .start()
+        .await
         .context("Failed to start WebSocket subscriber")?;
     println!("{}", style("✓ WebSocket subscriber started").green());
 
@@ -93,17 +93,23 @@ pub async fn start_command(
         let dashboard_config = config.dashboard.clone();
         let engine_clone = engine.clone();
         let alert_manager_clone = alert_manager.clone();
-        
+
         tokio::spawn(async move {
-            if let Err(e) = start_dashboard(dashboard_config, engine_clone, alert_manager_clone).await {
+            if let Err(e) =
+                start_dashboard(dashboard_config, engine_clone, alert_manager_clone).await
+            {
                 error!("Dashboard error: {}", e);
             }
         });
-        
+
         println!(
             "{} {}",
             style("✓ Dashboard started on").green(),
-            style(format!("http://{}:{}", config.dashboard.host, config.dashboard.port)).bold()
+            style(format!(
+                "http://{}:{}",
+                config.dashboard.host, config.dashboard.port
+            ))
+            .bold()
         );
     }
 
@@ -122,7 +128,12 @@ pub async fn start_command(
     );
 
     // Main event processing loop
-    println!("{}", style("🛡️  Watchtower is now monitoring Solana programs").bold().green());
+    println!(
+        "{}",
+        style("🛡️  Watchtower is now monitoring Solana programs")
+            .bold()
+            .green()
+    );
     println!("{}", style("Press Ctrl+C to stop").dim());
 
     // Event processing task
@@ -150,8 +161,14 @@ pub async fn start_command(
     println!("{}", style("Shutting down...").yellow());
 
     // Stop components
-    engine.stop().await.context("Failed to stop monitoring engine")?;
-    notification_manager.shutdown().await.context("Failed to shutdown notification manager")?;
+    engine
+        .stop()
+        .await
+        .context("Failed to stop monitoring engine")?;
+    notification_manager
+        .shutdown()
+        .await
+        .context("Failed to shutdown notification manager")?;
 
     println!("{}", style("✓ Watchtower stopped").green());
     Ok(())
@@ -159,16 +176,30 @@ pub async fn start_command(
 
 async fn register_builtin_rules(engine: &MonitoringEngine) -> Result<()> {
     use watchtower_engine::{
-        LiquidityDropRule, LargeTransactionRule, OracleDeviationRule, FailureRateRule
+        FailureRateRule, LargeTransactionRule, LiquidityDropRule, OracleDeviationRule,
     };
 
     // Register built-in rules
-    engine.add_rule(Box::new(LiquidityDropRule::new(10.0, 300, 1000000))).await;
-    engine.add_rule(Box::new(LargeTransactionRule::new(1.0, 500000))).await;
-    engine.add_rule(Box::new(OracleDeviationRule::new(5.0, "reference_oracle".to_string()))).await;
-    engine.add_rule(Box::new(FailureRateRule::new(25.0, 10, 300))).await;
+    engine
+        .add_rule(Box::new(LiquidityDropRule::new(10.0, 300, 1000000)))
+        .await;
+    engine
+        .add_rule(Box::new(LargeTransactionRule::new(1.0, 500000)))
+        .await;
+    engine
+        .add_rule(Box::new(OracleDeviationRule::new(
+            5.0,
+            "reference_oracle".to_string(),
+        )))
+        .await;
+    engine
+        .add_rule(Box::new(FailureRateRule::new(25.0, 10, 300)))
+        .await;
 
-    info!("Registered {} built-in rules", engine.list_rules().await.len());
+    info!(
+        "Registered {} built-in rules",
+        engine.list_rules().await.len()
+    );
     Ok(())
 }
 
@@ -180,22 +211,19 @@ async fn start_dashboard(
     // Dashboard implementation would go here
     // For now, we'll just log that it's started
     info!("Dashboard server started (implementation pending)");
-    
+
     // Keep the task alive
     loop {
         tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
     }
 }
 
-async fn start_metrics_server(
-    metrics: Arc<MetricsCollector>,
-    port: u16,
-) -> Result<()> {
+async fn start_metrics_server(metrics: Arc<MetricsCollector>, port: u16) -> Result<()> {
     use std::convert::Infallible;
     use std::net::SocketAddr;
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    
+
     let make_svc = hyper::service::make_service_fn(move |_conn| {
         let metrics = metrics.clone();
         async move {
@@ -208,7 +236,7 @@ async fn start_metrics_server(
                             hyper::Response::builder()
                                 .header("content-type", "text/plain; version=0.0.4")
                                 .body(hyper::Body::from(body))
-                                .unwrap()
+                                .unwrap(),
                         )
                     } else {
                         Ok(hyper::Response::builder()
@@ -222,9 +250,9 @@ async fn start_metrics_server(
     });
 
     let server = hyper::Server::bind(&addr).serve(make_svc);
-    
+
     info!("Metrics server listening on {}", addr);
-    
+
     if let Err(e) = server.await {
         error!("Metrics server error: {}", e);
     }
@@ -240,7 +268,7 @@ fn daemonize(config: &AppConfig) -> Result<()> {
 
         // Fork the process
         let pid = unsafe { libc::fork() };
-        
+
         if pid < 0 {
             anyhow::bail!("Failed to fork process");
         } else if pid > 0 {
@@ -256,8 +284,7 @@ fn daemonize(config: &AppConfig) -> Result<()> {
 
         // Change working directory
         if let Some(work_dir) = &config.app.working_dir {
-            std::env::set_current_dir(work_dir)
-                .context("Failed to change working directory")?;
+            std::env::set_current_dir(work_dir).context("Failed to change working directory")?;
         }
 
         // Redirect standard streams
@@ -283,4 +310,4 @@ fn daemonize(config: &AppConfig) -> Result<()> {
     }
 
     Ok(())
-} 
+}

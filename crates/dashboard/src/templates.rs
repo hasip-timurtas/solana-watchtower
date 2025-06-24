@@ -1,6 +1,6 @@
-use askama::Template;
-use crate::handlers::{AlertInfo, MetricItem, RuleInfo, NotificationChannel};
+use crate::handlers::{AlertInfo, MetricItem, NotificationChannel, RuleInfo};
 use crate::PaginationInfo;
+use askama::Template;
 
 /// Base template for common layout
 #[derive(Template)]
@@ -51,4 +51,4 @@ pub struct RulesTemplate {
 pub struct SettingsTemplate {
     pub title: String,
     pub notification_channels: Vec<NotificationChannel>,
-} 
+}

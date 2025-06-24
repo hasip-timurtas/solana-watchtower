@@ -10,25 +10,25 @@ use url::Url;
 pub struct SubscriberConfig {
     /// Solana RPC HTTP URL
     pub rpc_url: Url,
-    
+
     /// Solana WebSocket URL
     pub ws_url: Url,
-    
+
     /// Connection timeout in seconds
     #[serde(default = "default_timeout")]
     pub timeout_seconds: u64,
-    
+
     /// Maximum reconnection attempts
     #[serde(default = "default_max_reconnects")]
     pub max_reconnect_attempts: u32,
-    
+
     /// Reconnection delay in seconds
     #[serde(default = "default_reconnect_delay")]
     pub reconnect_delay_seconds: u64,
-    
+
     /// Programs to monitor
     pub programs: Vec<ProgramConfig>,
-    
+
     /// Subscription filters
     #[serde(default)]
     pub filters: SubscriptionFilters,
@@ -39,22 +39,22 @@ pub struct SubscriberConfig {
 pub struct ProgramConfig {
     /// Program public key
     pub id: Pubkey,
-    
+
     /// Human-readable name for the program
     pub name: String,
-    
+
     /// Whether to monitor account changes
     #[serde(default = "default_true")]
     pub monitor_accounts: bool,
-    
+
     /// Whether to monitor transactions
     #[serde(default = "default_true")]
     pub monitor_transactions: bool,
-    
+
     /// Whether to monitor logs
     #[serde(default = "default_true")]
     pub monitor_logs: bool,
-    
+
     /// Custom instruction filters (optional)
     pub instruction_filters: Option<Vec<String>>,
 }
@@ -65,15 +65,15 @@ pub struct SubscriptionFilters {
     /// Include failed transactions
     #[serde(default)]
     pub include_failed: bool,
-    
+
     /// Include vote transactions
     #[serde(default)]
     pub include_votes: bool,
-    
+
     /// Maximum transactions per notification
     #[serde(default = "default_max_transactions")]
     pub max_transactions_per_notification: usize,
-    
+
     /// Commitment level
     #[serde(default = "default_commitment")]
     pub commitment: String,
@@ -84,12 +84,12 @@ impl SubscriberConfig {
     pub fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout_seconds)
     }
-    
+
     /// Get reconnect delay as Duration
     pub fn reconnect_delay(&self) -> Duration {
         Duration::from_secs(self.reconnect_delay_seconds)
     }
-    
+
     /// Validate the configuration
     pub fn validate(&self) -> crate::SubscriberResult<()> {
         if self.programs.is_empty() {
@@ -97,21 +97,22 @@ impl SubscriberConfig {
                 "At least one program must be configured".to_string(),
             ));
         }
-        
+
         if self.timeout_seconds == 0 {
             return Err(crate::SubscriberError::InvalidConfig(
                 "Timeout must be greater than 0".to_string(),
             ));
         }
-        
+
         for program in &self.programs {
             if program.name.is_empty() {
-                return Err(crate::SubscriberError::InvalidConfig(
-                    format!("Program {} must have a name", program.id),
-                ));
+                return Err(crate::SubscriberError::InvalidConfig(format!(
+                    "Program {} must have a name",
+                    program.id
+                )));
             }
         }
-        
+
         Ok(())
     }
 }
@@ -146,4 +147,4 @@ fn default_max_transactions() -> usize {
 
 fn default_commitment() -> String {
     "confirmed".to_string()
-} 
+}

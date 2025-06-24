@@ -1,0 +1,695 @@
+{
+  "metadata": {
+    "generated_at": "2025-06-24T16:50:29.839849Z",
+    "solsec_version": "0.1.8",
+    "scan_target": "N/A",
+    "total_files_scanned": 16,
+    "scan_duration_ms": 0
+  },
+  "summary": {
+    "total_issues": 65,
+    "critical_issues": 0,
+    "high_issues": 0,
+    "medium_issues": 65,
+    "low_issues": 0,
+    "issues_by_rule": {
+      "integer_overflow": 65
+    },
+    "files_with_issues": [
+      "./crates/engine/src/alerts.rs",
+      "./crates/subscriber/src/client.rs",
+      "./examples/rules/defi-liquidation-rules.rs",
+      "./crates/cli/src/commands/status.rs",
+      "./crates/notifier/src/channels.rs",
+      "./crates/cli/src/main.rs",
+      "./crates/notifier/src/manager.rs",
+      "./crates/notifier/src/templates.rs",
+      "./crates/cli/src/commands/rules.rs",
+      "./crates/cli/src/config.rs",
+      "./crates/engine/src/metrics.rs",
+      "./crates/dashboard/src/handlers.rs",
+      "./crates/engine/src/rules.rs",
+      "./examples/rules/whale-activity-rules.rs",
+      "./crates/cli/src/commands/start.rs",
+      "./crates/dashboard/src/websocket.rs"
+    ]
+  },
+  "analysis_results": [
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/manager.rs",
+      "line_number": 462,
+      "column": null,
+      "code_snippet": "f(&mut *stats);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/channels.rs",
+      "line_number": 22,
+      "column": null,
+      "code_snippet": "pub trait NotificationChannel: Send + Sync {",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 41,
+      "column": null,
+      "code_snippet": "tracing::warn!(\"Failed to load built-in templates: {}\", e);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 143,
+      "column": null,
+      "code_snippet": "context.insert(\"confidence\", &(alert.confidence * 100.0));",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 183,
+      "column": null,
+      "code_snippet": "body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 184,
+      "column": null,
+      "code_snippet": ".container {{ max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 185,
+      "column": null,
+      "code_snippet": ".header {{ background-color: {}; color: white; padding: 20px; border-radius: 8px 8px 0 0; }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 187,
+      "column": null,
+      "code_snippet": ".field {{ margin-bottom: 15px; }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 188,
+      "column": null,
+      "code_snippet": ".label {{ font-weight: bold; color: #333; }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 190,
+      "column": null,
+      "code_snippet": ".actions {{ background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 20px; }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 232,
+      "column": null,
+      "code_snippet": "alert.confidence * 100.0,",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 259,
+      "column": null,
+      "code_snippet": "<div style=\"border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 15px;\">",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 284,
+      "column": null,
+      "code_snippet": "body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 285,
+      "column": null,
+      "code_snippet": ".container {{ max-width: 800px; margin: 0 auto; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 286,
+      "column": null,
+      "code_snippet": ".header {{ background-color: #007bff; color: white; padding: 20px; border-radius: 8px 8px 0 0; }}",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 333,
+      "column": null,
+      "code_snippet": "alert.confidence * 100.0,",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 338,
+      "column": null,
+      "code_snippet": "message.push_str(\"\\n\\n*Suggested Actions:*\");",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 355,
+      "column": null,
+      "code_snippet": "alert.confidence * 100.0,",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/notifier/src/templates.rs",
+      "line_number": 377,
+      "column": null,
+      "code_snippet": "alert.confidence * 100.0,",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/config.rs",
+      "line_number": 256,
+      "column": null,
+      "code_snippet": "rpc_url = \"https://api.mainnet-beta.solana.com\"",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/config.rs",
+      "line_number": 257,
+      "column": null,
+      "code_snippet": "ws_url = \"wss://api.mainnet-beta.solana.com\"",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/main.rs",
+      "line_number": 16,
+      "column": null,
+      "code_snippet": "#[command(about = \"Real-time monitoring and alerting for Solana programs\")]",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/main.rs",
+      "line_number": 168,
+      "column": null,
+      "code_snippet": "style(\"   Real-time monitoring for Solana programs\").dim()",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/rules.rs",
+      "line_number": 290,
+      "column": null,
+      "code_snippet": ".with_slot(12347 + i as u64);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/start.rs",
+      "line_number": 137,
+      "column": null,
+      "code_snippet": "println!(\"{}\", style(\"Press Ctrl+C to stop\").dim());",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/start.rs",
+      "line_number": 237,
+      "column": null,
+      "code_snippet": ".header(\"content-type\", \"text/plain; version=0.0.4\")",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/status.rs",
+      "line_number": 168,
+      "column": null,
+      "code_snippet": "connected_endpoints: vec![\"wss://api.mainnet-beta.solana.com\".to_string()],",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/status.rs",
+      "line_number": 228,
+      "column": null,
+      "code_snippet": "timestamp: \"2024-01-15 10:30:15\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/status.rs",
+      "line_number": 233,
+      "column": null,
+      "code_snippet": "timestamp: \"2024-01-15 10:30:20\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/status.rs",
+      "line_number": 238,
+      "column": null,
+      "code_snippet": "timestamp: \"2024-01-15 10:32:45\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/cli/src/commands/status.rs",
+      "line_number": 243,
+      "column": null,
+      "code_snippet": "timestamp: \"2024-01-15 10:35:12\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/dashboard/src/handlers.rs",
+      "line_number": 50,
+      "column": null,
+      "code_snippet": "let start = ((page - 1) * limit) as usize;",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/dashboard/src/handlers.rs",
+      "line_number": 51,
+      "column": null,
+      "code_snippet": "let end = (start + limit as usize).min(total_alerts);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/dashboard/src/handlers.rs",
+      "line_number": 190,
+      "column": null,
+      "code_snippet": "let start = ((page - 1) * limit) as usize;",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/dashboard/src/handlers.rs",
+      "line_number": 191,
+      "column": null,
+      "code_snippet": "let end = (start + limit as usize).min(total_alerts);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/dashboard/src/handlers.rs",
+      "line_number": 310,
+      "column": null,
+      "code_snippet": "last_activity: Some(\"2024-01-15 10:30:00 UTC\".to_string()),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/dashboard/src/websocket.rs",
+      "line_number": 143,
+      "column": null,
+      "code_snippet": ") -> Result<(), Box<dyn std::error::Error + Send + Sync>> {",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/subscriber/src/client.rs",
+      "line_number": 489,
+      "column": null,
+      "code_snippet": "rpc_url: \"https://api.mainnet-beta.solana.com\".parse().unwrap(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/subscriber/src/client.rs",
+      "line_number": 490,
+      "column": null,
+      "code_snippet": "ws_url: \"wss://api.mainnet-beta.solana.com\".parse().unwrap(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/rules.rs",
+      "line_number": 11,
+      "column": null,
+      "code_snippet": "pub trait Rule: Send + Sync {",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/rules.rs",
+      "line_number": 166,
+      "column": null,
+      "code_snippet": "event.timestamp - chrono::Duration::seconds(self.window_seconds as i64);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/rules.rs",
+      "line_number": 264,
+      "column": null,
+      "code_snippet": "if *amount >= self.amount_threshold {",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/rules.rs",
+      "line_number": 352,
+      "column": null,
+      "code_snippet": "((price_val - reference_price).abs() / reference_price) * 100.0;",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/rules.rs",
+      "line_number": 441,
+      "column": null,
+      "code_snippet": "event.timestamp - chrono::Duration::seconds(self.window_seconds as i64);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 295,
+      "column": null,
+      "code_snippet": "stats.avg_resolution_time_seconds = Some((avg_time + resolution_time) / 2.0);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 467,
+      "column": null,
+      "code_snippet": "error!(\"Failed to auto-resolve alert {}: {}\", alert_id, e);",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 526,
+      "column": null,
+      "code_snippet": "id: \"test-alert\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 543,
+      "column": null,
+      "code_snippet": "let retrieved = manager.get_alert(\"test-alert\").unwrap();",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 556,
+      "column": null,
+      "code_snippet": "id: \"test-alert\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 572,
+      "column": null,
+      "code_snippet": "manager.acknowledge_alert(\"test-alert\").await.unwrap();",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 574,
+      "column": null,
+      "code_snippet": "let retrieved = manager.get_alert(\"test-alert\").unwrap();",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 586,
+      "column": null,
+      "code_snippet": "id: \"test-alert\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 602,
+      "column": null,
+      "code_snippet": "manager.resolve_alert(\"test-alert\").await.unwrap();",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/alerts.rs",
+      "line_number": 605,
+      "column": null,
+      "code_snippet": "assert!(manager.get_alert(\"test-alert\").is_none());",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/metrics.rs",
+      "line_number": 482,
+      "column": null,
+      "code_snippet": "let cutoff = now - self.duration;",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./crates/engine/src/metrics.rs",
+      "line_number": 506,
+      "column": null,
+      "code_snippet": "let variance: f64 = values.iter().map(|v| (v - avg).powi(2)).sum::<f64>() / count as f64;",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/whale-activity-rules.rs",
+      "line_number": 87,
+      "column": null,
+      "code_snippet": "current_concentration * 100.0",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/whale-activity-rules.rs",
+      "line_number": 90,
+      "column": null,
+      "code_snippet": "(\"concentration_percent\".to_string(), (current_concentration * 100.0).to_string()),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/whale-activity-rules.rs",
+      "line_number": 91,
+      "column": null,
+      "code_snippet": "(\"threshold_percent\".to_string(), (self.concentration_threshold * 100.0).to_string()),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/whale-activity-rules.rs",
+      "line_number": 128,
+      "column": null,
+      "code_snippet": "movement_percent * 100.0,",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/whale-activity-rules.rs",
+      "line_number": 133,
+      "column": null,
+      "code_snippet": "(\"movement_percent\".to_string(), (movement_percent * 100.0).to_string()),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/whale-activity-rules.rs",
+      "line_number": 173,
+      "column": null,
+      "code_snippet": "name: \"whale-tracker\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/whale-activity-rules.rs",
+      "line_number": 180,
+      "column": null,
+      "code_snippet": "assert_eq!(rule.name, \"whale-tracker\");",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/defi-liquidation-rules.rs",
+      "line_number": 139,
+      "column": null,
+      "code_snippet": "name: \"test-liquidation\".to_string(),",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    },
+    {
+      "rule_name": "integer_overflow",
+      "severity": "medium",
+      "message": "Potential integer overflow. Consider using checked arithmetic operations.",
+      "file_path": "./examples/rules/defi-liquidation-rules.rs",
+      "line_number": 146,
+      "column": null,
+      "code_snippet": "assert_eq!(rule.name, \"test-liquidation\");",
+      "suggestion": "Use checked_add(), checked_sub(), or checked_mul()"
+    }
+  ],
+  "fuzz_results": null,
+  "recommendations": [
+    "Consider using checked arithmetic operations for 65 overflow-prone locations.",
+    "Run tests after fixing issues to ensure functionality is preserved.",
+    "Consider setting up CI/CD integration to catch issues early."
+  ]
+}

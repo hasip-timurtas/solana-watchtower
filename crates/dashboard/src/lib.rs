@@ -1,21 +1,19 @@
 use anyhow::Result;
 use axum::{
-    extract::{Path, Query, State},
     http::StatusCode,
-    response::{Html, IntoResponse, Json},
+    response::{IntoResponse, Json},
     routing::{get, post},
     Router,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
+use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
-use tower::{ServiceBuilder, timeout::TimeoutLayer};
 use tower_http::{
     cors::CorsLayer,
     services::{ServeDir, ServeFile},
 };
-use tracing::{info, warn};
-use watchtower_engine::{AlertManager, MonitoringEngine, MetricsCollector};
+use tracing::info;
+use watchtower_engine::{AlertManager, MetricsCollector, MonitoringEngine};
 
 mod handlers;
 mod templates;
@@ -81,13 +79,13 @@ impl DashboardServer {
     /// Start the dashboard server
     pub async fn start(self) -> Result<()> {
         let app = self.create_router();
-        
+
         let addr: SocketAddr = format!("{}:{}", self.config.host, self.config.port)
             .parse()
             .map_err(|e| anyhow::anyhow!("Invalid address: {}", e))?;
 
         let listener = TcpListener::bind(&addr).await?;
-        
+
         info!(
             "Dashboard server starting on http://{}:{}",
             self.config.host, self.config.port
@@ -107,7 +105,7 @@ impl DashboardServer {
         });
 
         axum::serve(listener, app).await?;
-        
+
         Ok(())
     }
 
@@ -120,7 +118,6 @@ impl DashboardServer {
             .route("/metrics", get(handlers::metrics_page))
             .route("/rules", get(handlers::rules_page))
             .route("/settings", get(handlers::settings_page))
-            
             // API endpoints
             .route("/api/status", get(handlers::api_status))
             .route("/api/alerts", get(handlers::api_alerts))
@@ -131,13 +128,10 @@ impl DashboardServer {
             .route("/api/programs", get(handlers::api_programs))
             .route("/api/config", get(handlers::api_config))
             .route("/api/config", post(handlers::api_update_config))
-            
             // WebSocket endpoint
             .route("/ws", get(handlers::websocket_handler))
-            
             // Health check
             .route("/health", get(handlers::health_check))
-            
             // State
             .with_state(self.state.clone());
 
@@ -307,4 +301,4 @@ mod tests {
         assert!(response.data.is_none());
         assert_eq!(response.error, Some("test error".to_string()));
     }
-} 
+}

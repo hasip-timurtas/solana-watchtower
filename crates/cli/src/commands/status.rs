@@ -1,6 +1,5 @@
 use anyhow::Result;
 use console::style;
-use std::process;
 
 pub async fn status_command() -> Result<()> {
     println!("{}", style("Watchtower System Status").bold().cyan());
@@ -8,11 +7,19 @@ pub async fn status_command() -> Result<()> {
 
     // Check if watchtower process is running
     let is_running = check_process_running().await;
-    
+
     if is_running {
-        println!("{} {}", style("Status:").bold(), style("Running").green().bold());
+        println!(
+            "{} {}",
+            style("Status:").bold(),
+            style("Running").green().bold()
+        );
     } else {
-        println!("{} {}", style("Status:").bold(), style("Not Running").red().bold());
+        println!(
+            "{} {}",
+            style("Status:").bold(),
+            style("Not Running").red().bold()
+        );
     }
 
     // Try to get metrics from running instance
@@ -20,11 +27,17 @@ pub async fn status_command() -> Result<()> {
         match get_metrics().await {
             Ok(metrics) => {
                 println!("\n{}", style("Metrics:").bold());
-                println!("• Events processed: {}", style(&metrics.events_processed).cyan());
-                println!("• Alerts generated: {}", style(&metrics.alerts_generated).cyan());
+                println!(
+                    "• Events processed: {}",
+                    style(&metrics.events_processed).cyan()
+                );
+                println!(
+                    "• Alerts generated: {}",
+                    style(&metrics.alerts_generated).cyan()
+                );
                 println!("• Rules active: {}", style(&metrics.active_rules).cyan());
                 println!("• Uptime: {}", style(&metrics.uptime).cyan());
-                
+
                 if !metrics.connected_endpoints.is_empty() {
                     println!("\n{}", style("Connected Endpoints:").bold());
                     for endpoint in &metrics.connected_endpoints {
@@ -52,31 +65,50 @@ pub async fn status_command() -> Result<()> {
         // Show dashboard and metrics URLs
         println!("\n{}", style("Endpoints:").bold());
         println!("• Dashboard: {}", style("http://127.0.0.1:8080").cyan());
-        println!("• Metrics: {}", style("http://127.0.0.1:9090/metrics").cyan());
-
+        println!(
+            "• Metrics: {}",
+            style("http://127.0.0.1:9090/metrics").cyan()
+        );
     } else {
-        println!("\n{}", style("The watchtower service is not currently running.").dim());
-        println!("{}", style("Use 'watchtower start' to begin monitoring.").dim());
+        println!(
+            "\n{}",
+            style("The watchtower service is not currently running.").dim()
+        );
+        println!(
+            "{}",
+            style("Use 'watchtower start' to begin monitoring.").dim()
+        );
     }
 
     // Check configuration
     match check_configuration().await {
         Ok(config_status) => {
             println!("\n{}", style("Configuration:").bold());
-            println!("• Config file: {}", 
-                if config_status.exists { 
-                    style("Found").green() 
-                } else { 
-                    style("Not found").red() 
+            println!(
+                "• Config file: {}",
+                if config_status.exists {
+                    style("Found").green()
+                } else {
+                    style("Not found").red()
                 }
             );
             if config_status.exists {
-                println!("• Programs monitored: {}", style(&config_status.programs_count).cyan());
-                println!("• Notification channels: {}", style(&config_status.channels_count).cyan());
+                println!(
+                    "• Programs monitored: {}",
+                    style(&config_status.programs_count).cyan()
+                );
+                println!(
+                    "• Notification channels: {}",
+                    style(&config_status.channels_count).cyan()
+                );
             }
         }
         Err(e) => {
-            println!("\n{} Configuration check failed: {}", style("⚠️").yellow(), e);
+            println!(
+                "\n{} Configuration check failed: {}",
+                style("⚠️").yellow(),
+                e
+            );
         }
     }
 
@@ -92,9 +124,10 @@ pub async fn status_command() -> Result<()> {
                         "INFO" => style(&log.level).green(),
                         _ => style(&log.level).dim(),
                     };
-                    println!("• {} [{}] {}", 
-                        style(&log.timestamp).dim(), 
-                        level_style, 
+                    println!(
+                        "• {} [{}] {}",
+                        style(&log.timestamp).dim(),
+                        level_style,
                         &log.message
                     );
                 }
@@ -131,9 +164,7 @@ async fn get_metrics() -> Result<SystemMetrics> {
         alerts_generated: "12".to_string(),
         active_rules: "4".to_string(),
         uptime: "2h 15m".to_string(),
-        connected_endpoints: vec![
-            "wss://api.mainnet-beta.solana.com".to_string(),
-        ],
+        connected_endpoints: vec!["wss://api.mainnet-beta.solana.com".to_string()],
         notification_channels: vec![
             ("email".to_string(), "active".to_string()),
             ("telegram".to_string(), "active".to_string()),
@@ -154,7 +185,7 @@ async fn check_configuration() -> Result<ConfigStatus> {
         .join("watchtower.toml");
 
     let exists = config_path.exists();
-    
+
     if exists {
         // Try to load and count configurations
         match crate::config::AppConfig::load_from_file(&config_path) {
@@ -166,13 +197,11 @@ async fn check_configuration() -> Result<ConfigStatus> {
                     channels_count: channels.len().to_string(),
                 })
             }
-            Err(_) => {
-                Ok(ConfigStatus {
-                    exists: true,
-                    programs_count: "Invalid config".to_string(),
-                    channels_count: "Invalid config".to_string(),
-                })
-            }
+            Err(_) => Ok(ConfigStatus {
+                exists: true,
+                programs_count: "Invalid config".to_string(),
+                channels_count: "Invalid config".to_string(),
+            }),
         }
     } else {
         Ok(ConfigStatus {
@@ -215,4 +244,4 @@ async fn get_recent_logs() -> Result<Vec<LogEntry>> {
             message: "Alert notification sent via email".to_string(),
         },
     ])
-} 
+}

@@ -7,7 +7,7 @@ use thiserror::Error;
 pub enum SubscriberError {
     /// WebSocket connection error
     #[error("WebSocket connection failed: {0}")]
-    WebSocketConnection(#[from] tokio_tungstenite::tungstenite::Error),
+    WebSocketConnection(Box<tokio_tungstenite::tungstenite::Error>),
 
     /// URL parsing error
     #[error("Invalid URL: {0}")]
@@ -19,7 +19,7 @@ pub enum SubscriberError {
 
     /// Solana client error
     #[error("Solana client error: {0}")]
-    SolanaClient(#[from] solana_client::client_error::ClientError),
+    SolanaClient(Box<solana_client::client_error::ClientError>),
 
     /// Invalid subscription configuration
     #[error("Invalid subscription config: {0}")]
@@ -49,5 +49,17 @@ pub enum SubscriberError {
     Generic(String),
 }
 
+impl From<tokio_tungstenite::tungstenite::Error> for SubscriberError {
+    fn from(err: tokio_tungstenite::tungstenite::Error) -> Self {
+        SubscriberError::WebSocketConnection(Box::new(err))
+    }
+}
+
+impl From<solana_client::client_error::ClientError> for SubscriberError {
+    fn from(err: solana_client::client_error::ClientError) -> Self {
+        SubscriberError::SolanaClient(Box::new(err))
+    }
+}
+
 /// Result type for subscriber operations.
-pub type SubscriberResult<T> = Result<T, SubscriberError>; 
+pub type SubscriberResult<T> = Result<T, SubscriberError>;

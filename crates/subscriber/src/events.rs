@@ -3,9 +3,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use solana_sdk::{pubkey::Pubkey, signature::Signature};
-use solana_transaction_status::{
-    EncodedConfirmedTransactionWithStatusMeta, UiTransactionEncoding,
-};
+
 use std::collections::HashMap;
 
 /// A monitored program event that can trigger rules.
@@ -13,31 +11,31 @@ use std::collections::HashMap;
 pub struct ProgramEvent {
     /// Unique event identifier
     pub id: String,
-    
+
     /// Program that generated this event
     pub program_id: Pubkey,
-    
+
     /// Program name (from config)
     pub program_name: String,
-    
+
     /// Event type
     pub event_type: EventType,
-    
+
     /// Timestamp when the event occurred
     pub timestamp: DateTime<Utc>,
-    
+
     /// Solana slot number
     pub slot: u64,
-    
+
     /// Block time (if available)
     pub block_time: Option<i64>,
-    
+
     /// Transaction signature (if applicable)
     pub signature: Option<Signature>,
-    
+
     /// Event-specific data
     pub data: EventData,
-    
+
     /// Additional metadata
     pub metadata: HashMap<String, serde_json::Value>,
 }
@@ -48,19 +46,19 @@ pub struct ProgramEvent {
 pub enum EventType {
     /// Transaction executed by the program
     Transaction,
-    
+
     /// Account state changed
     AccountChange,
-    
+
     /// Program log emitted
     LogEntry,
-    
+
     /// Instruction executed
     Instruction,
-    
+
     /// Token transfer (for token programs)
     TokenTransfer,
-    
+
     /// Custom event type
     Custom { name: String },
 }
@@ -80,7 +78,7 @@ pub enum EventData {
         /// Fee paid
         fee: u64,
     },
-    
+
     /// Account change data
     AccountChange {
         /// Account public key
@@ -94,7 +92,7 @@ pub enum EventData {
         /// Owner program
         owner: Pubkey,
     },
-    
+
     /// Log entry data
     LogEntry {
         /// Log message
@@ -104,7 +102,7 @@ pub enum EventData {
         /// Instruction context
         instruction_index: Option<usize>,
     },
-    
+
     /// Instruction execution data
     Instruction {
         /// Instruction index in transaction
@@ -116,7 +114,7 @@ pub enum EventData {
         /// Execution success
         success: bool,
     },
-    
+
     /// Token transfer data
     TokenTransfer {
         /// Source account
@@ -130,7 +128,7 @@ pub enum EventData {
         /// Decimals for display
         decimals: u8,
     },
-    
+
     /// Custom event data
     Custom {
         /// Event name
@@ -143,53 +141,67 @@ pub enum EventData {
 impl Clone for EventData {
     fn clone(&self) -> Self {
         match self {
-            EventData::Transaction { signature, success, compute_units, fee } => {
-                EventData::Transaction {
-                    signature: *signature,
-                    success: *success,
-                    compute_units: *compute_units,
-                    fee: *fee,
-                }
-            }
-            EventData::AccountChange { account, balance_before, balance_after, data_size_change, owner } => {
-                EventData::AccountChange {
-                    account: *account,
-                    balance_before: *balance_before,
-                    balance_after: *balance_after,
-                    data_size_change: *data_size_change,
-                    owner: *owner,
-                }
-            }
-            EventData::LogEntry { message, level, instruction_index } => {
-                EventData::LogEntry {
-                    message: message.clone(),
-                    level: level.clone(),
-                    instruction_index: *instruction_index,
-                }
-            }
-            EventData::Instruction { index, data, accounts, success } => {
-                EventData::Instruction {
-                    index: *index,
-                    data: data.clone(),
-                    accounts: accounts.clone(),
-                    success: *success,
-                }
-            }
-            EventData::TokenTransfer { from, to, amount, mint, decimals } => {
-                EventData::TokenTransfer {
-                    from: *from,
-                    to: *to,
-                    amount: *amount,
-                    mint: *mint,
-                    decimals: *decimals,
-                }
-            }
-            EventData::Custom { name, data } => {
-                EventData::Custom {
-                    name: name.clone(),
-                    data: data.clone(),
-                }
-            }
+            EventData::Transaction {
+                signature,
+                success,
+                compute_units,
+                fee,
+            } => EventData::Transaction {
+                signature: *signature,
+                success: *success,
+                compute_units: *compute_units,
+                fee: *fee,
+            },
+            EventData::AccountChange {
+                account,
+                balance_before,
+                balance_after,
+                data_size_change,
+                owner,
+            } => EventData::AccountChange {
+                account: *account,
+                balance_before: *balance_before,
+                balance_after: *balance_after,
+                data_size_change: *data_size_change,
+                owner: *owner,
+            },
+            EventData::LogEntry {
+                message,
+                level,
+                instruction_index,
+            } => EventData::LogEntry {
+                message: message.clone(),
+                level: level.clone(),
+                instruction_index: *instruction_index,
+            },
+            EventData::Instruction {
+                index,
+                data,
+                accounts,
+                success,
+            } => EventData::Instruction {
+                index: *index,
+                data: data.clone(),
+                accounts: accounts.clone(),
+                success: *success,
+            },
+            EventData::TokenTransfer {
+                from,
+                to,
+                amount,
+                mint,
+                decimals,
+            } => EventData::TokenTransfer {
+                from: *from,
+                to: *to,
+                amount: *amount,
+                mint: *mint,
+                decimals: *decimals,
+            },
+            EventData::Custom { name, data } => EventData::Custom {
+                name: name.clone(),
+                data: data.clone(),
+            },
         }
     }
 }
@@ -225,46 +237,46 @@ impl ProgramEvent {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Add metadata to the event.
     pub fn with_metadata(mut self, key: String, value: serde_json::Value) -> Self {
         self.metadata.insert(key, value);
         self
     }
-    
+
     /// Set the slot number.
     pub fn with_slot(mut self, slot: u64) -> Self {
         self.slot = slot;
         self
     }
-    
+
     /// Set the block time.
     pub fn with_block_time(mut self, block_time: Option<i64>) -> Self {
         self.block_time = block_time;
         self
     }
-    
+
     /// Set the transaction signature.
     pub fn with_signature(mut self, signature: Option<Signature>) -> Self {
         self.signature = signature;
         self
     }
-    
+
     /// Check if this is a transaction event.
     pub fn is_transaction(&self) -> bool {
         matches!(self.event_type, EventType::Transaction)
     }
-    
+
     /// Check if this is an account change event.
     pub fn is_account_change(&self) -> bool {
         matches!(self.event_type, EventType::AccountChange)
     }
-    
+
     /// Check if this is a log entry event.
     pub fn is_log_entry(&self) -> bool {
         matches!(self.event_type, EventType::LogEntry)
     }
-    
+
     /// Get transaction signature if this is a transaction event.
     pub fn transaction_signature(&self) -> Option<&Signature> {
         match &self.data {
@@ -272,7 +284,7 @@ impl ProgramEvent {
             _ => None,
         }
     }
-    
+
     /// Get the transaction success status.
     pub fn is_successful(&self) -> Option<bool> {
         match &self.data {
@@ -299,7 +311,7 @@ impl EventType {
 
 impl LogLevel {
     /// Parse log level from string.
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "error" | "err" => Some(LogLevel::Error),
             "warn" | "warning" => Some(LogLevel::Warn),
@@ -309,4 +321,4 @@ impl LogLevel {
             _ => None,
         }
     }
-} 
+}

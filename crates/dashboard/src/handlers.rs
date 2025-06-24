@@ -1,7 +1,5 @@
 use crate::{
-    templates::{
-        AlertsTemplate, IndexTemplate, MetricsTemplate, RulesTemplate, SettingsTemplate,
-    },
+    templates::{AlertsTemplate, IndexTemplate, MetricsTemplate, RulesTemplate, SettingsTemplate},
     websocket::handle_websocket,
     ApiResponse, AppState, DashboardError, DashboardResult, PaginationInfo, PaginationQuery,
 };
@@ -13,7 +11,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{error, info, warn};
+use tracing::info;
 
 /// Dashboard index page
 pub async fn index(State(state): State<AppState>) -> DashboardResult<Html<String>> {
@@ -23,7 +21,11 @@ pub async fn index(State(state): State<AppState>) -> DashboardResult<Html<String
 
     let template = IndexTemplate {
         title: "Solana Watchtower Dashboard".to_string(),
-        engine_status: if engine_state.running { "Running".to_string() } else { "Stopped".to_string() },
+        engine_status: if engine_state.running {
+            "Running".to_string()
+        } else {
+            "Stopped".to_string()
+        },
         alert_count: alert_stats.total_alerts as usize,
         active_rules,
         uptime: format!("{}s", engine_state.start_time.timestamp()),
@@ -43,7 +45,7 @@ pub async fn alerts_page(
 
     let all_alerts = state.alert_manager.list_alerts(None).await;
     let total_alerts = all_alerts.len();
-    
+
     // Simple pagination
     let start = ((page - 1) * limit) as usize;
     let end = (start + limit as usize).min(total_alerts);
@@ -55,14 +57,17 @@ pub async fn alerts_page(
 
     let template = AlertsTemplate {
         title: "Alerts".to_string(),
-        alerts: alerts.into_iter().map(|alert| AlertInfo {
-            id: alert.id.clone(),
-            severity: alert.severity.as_str().to_string(),
-            message: alert.message.clone(),
-            program_id: alert.program_id.to_string(),
-            timestamp: alert.timestamp.format("%Y-%m-%d %H:%M:%S").to_string(),
-            resolved: alert.resolved,
-        }).collect(),
+        alerts: alerts
+            .into_iter()
+            .map(|alert| AlertInfo {
+                id: alert.id.clone(),
+                severity: alert.severity.as_str().to_string(),
+                message: alert.message.clone(),
+                program_id: alert.program_id.to_string(),
+                timestamp: alert.timestamp.format("%Y-%m-%d %H:%M:%S").to_string(),
+                resolved: alert.resolved,
+            })
+            .collect(),
         pagination: PaginationInfo {
             page,
             limit,
@@ -78,14 +83,16 @@ pub async fn alerts_page(
 /// Metrics overview page
 pub async fn metrics_page(State(state): State<AppState>) -> DashboardResult<Html<String>> {
     let metrics_snapshot = state.metrics.snapshot();
-    
+
     // Convert metrics to display format
-    let metric_items: Vec<MetricItem> = metrics_snapshot.values.into_iter().map(|(name, value)| {
-        MetricItem {
+    let metric_items: Vec<MetricItem> = metrics_snapshot
+        .values
+        .into_iter()
+        .map(|(name, value)| MetricItem {
             name,
             value: value.to_string(),
-        }
-    }).collect();
+        })
+        .collect();
 
     let template = MetricsTemplate {
         title: "System Metrics".to_string(),
@@ -99,13 +106,16 @@ pub async fn metrics_page(State(state): State<AppState>) -> DashboardResult<Html
 /// Rules management page
 pub async fn rules_page(State(state): State<AppState>) -> DashboardResult<Html<String>> {
     let rule_names = state.engine.list_rules().await;
-    
-    let rule_items: Vec<RuleInfo> = rule_names.into_iter().map(|name| RuleInfo {
-        name: name.clone(),
-        description: format!("Rule: {}", name),
-        enabled: true,
-        trigger_count: 0,
-    }).collect();
+
+    let rule_items: Vec<RuleInfo> = rule_names
+        .into_iter()
+        .map(|name| RuleInfo {
+            name: name.clone(),
+            description: format!("Rule: {}", name),
+            enabled: true,
+            trigger_count: 0,
+        })
+        .collect();
 
     let template = RulesTemplate {
         title: "Monitoring Rules".to_string(),
@@ -150,11 +160,15 @@ pub async fn api_status(State(state): State<AppState>) -> Json<ApiResponse<Syste
     let active_rules = state.engine.list_rules().await.len();
 
     let status = SystemStatus {
-        engine_status: if engine_state.running { "Running".to_string() } else { "Stopped".to_string() },
+        engine_status: if engine_state.running {
+            "Running".to_string()
+        } else {
+            "Stopped".to_string()
+        },
         alert_count: alert_stats.total_alerts as usize,
         active_rules,
         uptime_seconds: 8100, // TODO: Calculate actual uptime
-        memory_usage_mb: 256,  // TODO: Get actual memory usage
+        memory_usage_mb: 256, // TODO: Get actual memory usage
         connected_websockets: state.ws_connections.read().await.len(),
     };
 
@@ -171,7 +185,7 @@ pub async fn api_alerts(
 
     let all_alerts = state.alert_manager.list_alerts(None).await;
     let total_alerts = all_alerts.len();
-    
+
     // Simple pagination
     let start = ((page - 1) * limit) as usize;
     let end = (start + limit as usize).min(total_alerts);
@@ -181,14 +195,17 @@ pub async fn api_alerts(
         Vec::new()
     };
 
-    let alert_infos: Vec<AlertInfo> = alerts.into_iter().map(|alert| AlertInfo {
-        id: alert.id.clone(),
-        severity: alert.severity.as_str().to_string(),
-        message: alert.message.clone(),
-        program_id: alert.program_id.to_string(),
-        timestamp: alert.timestamp.format("%Y-%m-%d %H:%M:%S").to_string(),
-        resolved: alert.resolved,
-    }).collect();
+    let alert_infos: Vec<AlertInfo> = alerts
+        .into_iter()
+        .map(|alert| AlertInfo {
+            id: alert.id.clone(),
+            severity: alert.severity.as_str().to_string(),
+            message: alert.message.clone(),
+            program_id: alert.program_id.to_string(),
+            timestamp: alert.timestamp.format("%Y-%m-%d %H:%M:%S").to_string(),
+            resolved: alert.resolved,
+        })
+        .collect();
 
     let pagination = PaginationInfo {
         page,
@@ -197,7 +214,10 @@ pub async fn api_alerts(
         pages: ((total_alerts as f64) / (limit as f64)).ceil() as u32,
     };
 
-    Json(ApiResponse::success_with_pagination(alert_infos, pagination))
+    Json(ApiResponse::success_with_pagination(
+        alert_infos,
+        pagination,
+    ))
 }
 
 /// API: Get specific alert details
@@ -214,7 +234,11 @@ pub async fn api_alert_detail(
                 program_id: alert.program_id.to_string(),
                 timestamp: alert.timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string(),
                 resolved: alert.resolved,
-                metadata: alert.metadata.iter().map(|(k, v)| (k.clone(), v.to_string())).collect(),
+                metadata: alert
+                    .metadata
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.to_string()))
+                    .collect(),
                 rule_name: alert.rule_name.clone(),
             };
             Json(ApiResponse::success(detail))
@@ -226,7 +250,7 @@ pub async fn api_alert_detail(
 /// API: Get metrics in JSON format
 pub async fn api_metrics(State(state): State<AppState>) -> Json<ApiResponse<MetricsData>> {
     let metrics_snapshot = state.metrics.snapshot();
-    
+
     let metrics_data = MetricsData {
         raw_prometheus: "# Prometheus metrics placeholder".to_string(),
         parsed_metrics: metrics_snapshot.values,
@@ -239,13 +263,16 @@ pub async fn api_metrics(State(state): State<AppState>) -> Json<ApiResponse<Metr
 /// API: Get rules information
 pub async fn api_rules(State(state): State<AppState>) -> Json<ApiResponse<Vec<RuleInfo>>> {
     let rule_names = state.engine.list_rules().await;
-    
-    let rule_infos: Vec<RuleInfo> = rule_names.into_iter().map(|name| RuleInfo {
-        name: name.clone(),
-        description: format!("Rule: {}", name),
-        enabled: true,
-        trigger_count: 0,
-    }).collect();
+
+    let rule_infos: Vec<RuleInfo> = rule_names
+        .into_iter()
+        .map(|name| RuleInfo {
+            name: name.clone(),
+            description: format!("Rule: {}", name),
+            enabled: true,
+            trigger_count: 0,
+        })
+        .collect();
 
     Json(ApiResponse::success(rule_infos))
 }
@@ -256,7 +283,7 @@ pub async fn api_rule_detail(
     Path(rule_name): Path<String>,
 ) -> Json<ApiResponse<RuleDetail>> {
     let rule_names = state.engine.list_rules().await;
-    
+
     if rule_names.contains(&rule_name) {
         let detail = RuleDetail {
             name: rule_name.clone(),
@@ -275,15 +302,13 @@ pub async fn api_rule_detail(
 /// API: Get monitored programs
 pub async fn api_programs(State(_state): State<AppState>) -> Json<ApiResponse<Vec<ProgramInfo>>> {
     // TODO: Implement once get_monitored_programs is available
-    let program_infos: Vec<ProgramInfo> = vec![
-        ProgramInfo {
-            id: "11111111111111111111111111111112".to_string(),
-            name: "System Program".to_string(),
-            events_processed: 1000,
-            alerts_generated: 5,
-            last_activity: Some("2024-01-15 10:30:00 UTC".to_string()),
-        },
-    ];
+    let program_infos: Vec<ProgramInfo> = vec![ProgramInfo {
+        id: "11111111111111111111111111111112".to_string(),
+        name: "System Program".to_string(),
+        events_processed: 1000,
+        alerts_generated: 5,
+        last_activity: Some("2024-01-15 10:30:00 UTC".to_string()),
+    }];
 
     Json(ApiResponse::success(program_infos))
 }
@@ -321,14 +346,13 @@ pub async fn api_update_config(
 ) -> Json<ApiResponse<String>> {
     // TODO: Implement configuration updates
     info!("Configuration update requested: {:?}", config);
-    Json(ApiResponse::success("Configuration updated successfully".to_string()))
+    Json(ApiResponse::success(
+        "Configuration updated successfully".to_string(),
+    ))
 }
 
 /// WebSocket handler
-pub async fn websocket_handler(
-    ws: WebSocketUpgrade,
-    State(state): State<AppState>,
-) -> Response {
+pub async fn websocket_handler(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
     ws.on_upgrade(|socket| handle_websocket(socket, state))
 }
 
@@ -346,16 +370,14 @@ pub async fn serve_static(Path(file_path): Path<String>) -> Result<Response, Sta
     // For demo purposes, return a simple CSS file
     if file_path.ends_with(".css") {
         let css_content = include_str!("../static/style.css");
-        Ok((
-            [(header::CONTENT_TYPE, "text/css")],
-            css_content,
-        ).into_response())
+        Ok(([(header::CONTENT_TYPE, "text/css")], css_content).into_response())
     } else if file_path.ends_with(".js") {
         let js_content = include_str!("../static/app.js");
         Ok((
             [(header::CONTENT_TYPE, "application/javascript")],
             js_content,
-        ).into_response())
+        )
+            .into_response())
     } else {
         Err(StatusCode::NOT_FOUND)
     }
@@ -465,4 +487,4 @@ pub struct ConfigUpdateRequest {
 pub struct HealthStatus {
     pub status: String,
     pub timestamp: i64,
-} 
+}

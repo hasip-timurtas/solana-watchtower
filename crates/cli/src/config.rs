@@ -75,18 +75,16 @@ pub struct AppSettings {
 impl AppConfig {
     /// Load configuration from a TOML file
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let content = std::fs::read_to_string(&path).with_context(|| {
-            format!("Failed to read config file: {}", path.as_ref().display())
-        })?;
+        let content = std::fs::read_to_string(&path)
+            .with_context(|| format!("Failed to read config file: {}", path.as_ref().display()))?;
 
-        let mut config: AppConfig = toml::from_str(&content).with_context(|| {
-            format!("Failed to parse config file: {}", path.as_ref().display())
-        })?;
+        let config: AppConfig = toml::from_str(&content)
+            .with_context(|| format!("Failed to parse config file: {}", path.as_ref().display()))?;
 
         // Validate the configuration
-        config.validate().with_context(|| {
-            format!("Invalid configuration in: {}", path.as_ref().display())
-        })?;
+        config
+            .validate()
+            .with_context(|| format!("Invalid configuration in: {}", path.as_ref().display()))?;
 
         Ok(config)
     }
@@ -166,6 +164,7 @@ impl AppConfig {
     }
 
     /// Create a default configuration for testing
+    #[allow(dead_code)]
     pub fn default_for_testing() -> Self {
         Self {
             subscriber: SubscriberConfig {
@@ -294,4 +293,4 @@ mod tests {
         std::env::remove_var("WATCHTOWER_LOG_LEVEL");
         std::env::remove_var("WATCHTOWER_DASHBOARD_PORT");
     }
-} 
+}

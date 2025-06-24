@@ -14,7 +14,7 @@ use lettre::{
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use tracing::{debug, error, info};
+use tracing::{error, info};
 use watchtower_engine::Alert;
 
 /// Trait for notification channels.
@@ -24,7 +24,11 @@ pub trait NotificationChannel: Send + Sync {
     fn name(&self) -> &str;
 
     /// Send a notification through this channel
-    async fn send(&self, alert: &Alert, template_data: &HashMap<String, Value>) -> NotifierResult<()>;
+    async fn send(
+        &self,
+        alert: &Alert,
+        template_data: &HashMap<String, Value>,
+    ) -> NotifierResult<()>;
 
     /// Test the channel configuration
     async fn test(&self) -> NotifierResult<()>;
@@ -35,8 +39,14 @@ pub trait NotificationChannel: Send + Sync {
     }
 
     /// Send multiple alerts as a batch (if supported)
-    async fn send_batch(&self, _alerts: &[Alert], _template_data: &HashMap<String, Value>) -> NotifierResult<()> {
-        Err(NotifierError::Generic("Batching not supported for this channel".to_string()))
+    async fn send_batch(
+        &self,
+        _alerts: &[Alert],
+        _template_data: &HashMap<String, Value>,
+    ) -> NotifierResult<()> {
+        Err(NotifierError::Generic(
+            "Batching not supported for this channel".to_string(),
+        ))
     }
 }
 
@@ -72,7 +82,7 @@ impl EmailChannel {
     /// Create a new email channel.
     pub fn new(config: EmailConfig) -> NotifierResult<Self> {
         let creds = Credentials::new(config.username.clone(), config.password.clone());
-        
+
         let transport = if config.use_tls {
             AsyncSmtpTransport::<Tokio1Executor>::relay(&config.smtp_server)
                 .map_err(|e| NotifierError::SmtpTransportBuild(e.to_string()))?
@@ -98,15 +108,25 @@ impl NotificationChannel for EmailChannel {
         "email"
     }
 
-    async fn send(&self, alert: &Alert, template_data: &HashMap<String, Value>) -> NotifierResult<()> {
+    async fn send(
+        &self,
+        alert: &Alert,
+        template_data: &HashMap<String, Value>,
+    ) -> NotifierResult<()> {
         let subject = if let Some(template) = &self.config.subject_template {
-            self.template_engine.render_template(template, template_data)?
+            self.template_engine
+                .render_template(template, template_data)?
         } else {
-            format!("[Watchtower] {} Alert: {}", alert.severity.as_str().to_uppercase(), alert.rule_name)
+            format!(
+                "[Watchtower] {} Alert: {}",
+                alert.severity.as_str().to_uppercase(),
+                alert.rule_name
+            )
         };
 
         let body = if let Some(template) = &self.config.body_template {
-            self.template_engine.render_template(template, template_data)?
+            self.template_engine
+                .render_template(template, template_data)?
         } else {
             self.template_engine.render_default_email_template(alert)?
         };
@@ -165,7 +185,11 @@ impl NotificationChannel for EmailChannel {
         true
     }
 
-    async fn send_batch(&self, alerts: &[Alert], template_data: &HashMap<String, Value>) -> NotifierResult<()> {
+    async fn send_batch(
+        &self,
+        alerts: &[Alert],
+        _template_data: &HashMap<String, Value>,
+    ) -> NotifierResult<()> {
         let subject = format!("[Watchtower] {} Alerts", alerts.len());
         let body = self.template_engine.render_batch_email_template(alerts)?;
 
@@ -183,7 +207,10 @@ impl NotificationChannel for EmailChannel {
                 .header(ContentType::TEXT_HTML)
                 .body(body.clone())?;
 
-            self.transport.send(email).await.map_err(NotifierError::SmtpTransport)?;
+            self.transport
+                .send(email)
+                .await
+                .map_err(NotifierError::SmtpTransport)?;
         }
 
         info!("Batch email sent with {} alerts", alerts.len());
@@ -208,15 +235,24 @@ impl NotificationChannel for TelegramChannel {
         "telegram"
     }
 
-    async fn send(&self, alert: &Alert, template_data: &HashMap<String, Value>) -> NotifierResult<()> {
+    async fn send(
+        &self,
+        alert: &Alert,
+        template_data: &HashMap<String, Value>,
+    ) -> NotifierResult<()> {
         let message = if let Some(template) = &self.config.message_template {
-            self.template_engine.render_template(template, template_data)?
+            self.template_engine
+                .render_template(template, template_data)?
         } else {
-            self.template_engine.render_default_telegram_template(alert)?
+            self.template_engine
+                .render_default_telegram_template(alert)?
         };
 
-        let url = format!("https://api.telegram.org/bot{}/sendMessage", self.config.bot_token);
-        
+        let url = format!(
+            "https://api.telegram.org/bot{}/sendMessage",
+            self.config.bot_token
+        );
+
         let mut payload = json!({
             "chat_id": self.config.chat_id,
             "text": message,
@@ -228,15 +264,14 @@ impl NotificationChannel for TelegramChannel {
             payload["parse_mode"] = json!(self.config.parse_mode);
         }
 
-        let response = self.client
-            .post(&url)
-            .json(&payload)
-            .send()
-            .await?;
+        let response = self.client.post(&url).json(&payload).send().await?;
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
-            return Err(NotifierError::Generic(format!("Telegram API error: {}", error_text)));
+            return Err(NotifierError::Generic(format!(
+                "Telegram API error: {}",
+                error_text
+            )));
         }
 
         info!("Telegram message sent successfully");
@@ -282,9 +317,14 @@ impl NotificationChannel for SlackChannel {
         "slack"
     }
 
-    async fn send(&self, alert: &Alert, template_data: &HashMap<String, Value>) -> NotifierResult<()> {
+    async fn send(
+        &self,
+        alert: &Alert,
+        template_data: &HashMap<String, Value>,
+    ) -> NotifierResult<()> {
         let text = if let Some(template) = &self.config.message_template {
-            self.template_engine.render_template(template, template_data)?
+            self.template_engine
+                .render_template(template, template_data)?
         } else {
             self.template_engine.render_default_slack_template(alert)?
         };
@@ -327,7 +367,7 @@ impl NotificationChannel for SlackChannel {
                     "short": true
                 },
                 {
-                    "title": "Severity", 
+                    "title": "Severity",
                     "value": alert.severity.as_str(),
                     "short": true
                 },
@@ -340,7 +380,8 @@ impl NotificationChannel for SlackChannel {
             "ts": alert.timestamp.timestamp()
         }]);
 
-        let response = self.client
+        let response = self
+            .client
             .post(&self.config.webhook_url)
             .json(&payload)
             .send()
@@ -348,7 +389,10 @@ impl NotificationChannel for SlackChannel {
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
-            return Err(NotifierError::Generic(format!("Slack webhook failed: {}", error_text)));
+            return Err(NotifierError::Generic(format!(
+                "Slack webhook failed: {}",
+                error_text
+            )));
         }
 
         info!("Slack message sent successfully");
@@ -394,11 +438,17 @@ impl NotificationChannel for DiscordChannel {
         "discord"
     }
 
-    async fn send(&self, alert: &Alert, template_data: &HashMap<String, Value>) -> NotifierResult<()> {
+    async fn send(
+        &self,
+        alert: &Alert,
+        template_data: &HashMap<String, Value>,
+    ) -> NotifierResult<()> {
         let content = if let Some(template) = &self.config.message_template {
-            self.template_engine.render_template(template, template_data)?
+            self.template_engine
+                .render_template(template, template_data)?
         } else {
-            self.template_engine.render_default_discord_template(alert)?
+            self.template_engine
+                .render_default_discord_template(alert)?
         };
 
         let mut payload = json!({
@@ -447,7 +497,8 @@ impl NotificationChannel for DiscordChannel {
             }]);
         }
 
-        let response = self.client
+        let response = self
+            .client
             .post(&self.config.webhook_url)
             .json(&payload)
             .send()
@@ -455,7 +506,10 @@ impl NotificationChannel for DiscordChannel {
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
-            return Err(NotifierError::Generic(format!("Discord webhook failed: {}", error_text)));
+            return Err(NotifierError::Generic(format!(
+                "Discord webhook failed: {}",
+                error_text
+            )));
         }
 
         info!("Discord message sent successfully");
@@ -482,4 +536,4 @@ impl NotificationChannel for DiscordChannel {
 
         self.send(&test_alert, &test_data).await
     }
-} 
+}

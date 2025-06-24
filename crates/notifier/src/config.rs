@@ -8,20 +8,20 @@ use std::collections::HashMap;
 pub struct NotifierConfig {
     /// Email notification configuration
     pub email: Option<EmailConfig>,
-    
+
     /// Telegram notification configuration
     pub telegram: Option<TelegramConfig>,
-    
+
     /// Slack notification configuration
     pub slack: Option<SlackConfig>,
-    
+
     /// Discord notification configuration
     pub discord: Option<DiscordConfig>,
-    
+
     /// Rate limiting configuration
     #[serde(default)]
     pub rate_limiting: RateLimitConfig,
-    
+
     /// Global notification settings
     #[serde(default)]
     pub global: GlobalNotificationConfig,
@@ -32,33 +32,33 @@ pub struct NotifierConfig {
 pub struct EmailConfig {
     /// SMTP server hostname
     pub smtp_server: String,
-    
+
     /// SMTP server port
     #[serde(default = "default_smtp_port")]
     pub smtp_port: u16,
-    
+
     /// Username for SMTP authentication
     pub username: String,
-    
+
     /// Password for SMTP authentication
     pub password: String,
-    
+
     /// From email address
     pub from_address: String,
-    
+
     /// From name (optional)
     pub from_name: Option<String>,
-    
+
     /// List of recipient email addresses
     pub to_addresses: Vec<String>,
-    
+
     /// Use TLS encryption
     #[serde(default = "default_true")]
     pub use_tls: bool,
-    
+
     /// Email subject template
     pub subject_template: Option<String>,
-    
+
     /// Email body template (HTML or plain text)
     pub body_template: Option<String>,
 }
@@ -68,21 +68,21 @@ pub struct EmailConfig {
 pub struct TelegramConfig {
     /// Telegram Bot API token
     pub bot_token: String,
-    
+
     /// Chat ID to send messages to
     pub chat_id: i64,
-    
+
     /// Message template
     pub message_template: Option<String>,
-    
+
     /// Parse mode (Markdown, HTML, or None)
     #[serde(default = "default_parse_mode")]
     pub parse_mode: String,
-    
+
     /// Disable web page preview
     #[serde(default)]
     pub disable_web_page_preview: bool,
-    
+
     /// Send messages silently
     #[serde(default)]
     pub disable_notification: bool,
@@ -93,19 +93,19 @@ pub struct TelegramConfig {
 pub struct SlackConfig {
     /// Slack webhook URL
     pub webhook_url: String,
-    
+
     /// Channel to send messages to (optional, webhook may have default)
     pub channel: Option<String>,
-    
+
     /// Username to send messages as
     pub username: Option<String>,
-    
+
     /// Icon emoji or URL for the bot
     pub icon: Option<String>,
-    
+
     /// Message template
     pub message_template: Option<String>,
-    
+
     /// Custom fields to include in messages
     pub custom_fields: Option<HashMap<String, String>>,
 }
@@ -115,16 +115,16 @@ pub struct SlackConfig {
 pub struct DiscordConfig {
     /// Discord webhook URL
     pub webhook_url: String,
-    
+
     /// Username to send messages as
     pub username: Option<String>,
-    
+
     /// Avatar URL for the bot
     pub avatar_url: Option<String>,
-    
+
     /// Message template
     pub message_template: Option<String>,
-    
+
     /// Whether to use Discord embeds for rich formatting
     #[serde(default = "default_true")]
     pub use_embeds: bool,
@@ -136,11 +136,11 @@ pub struct RateLimitConfig {
     /// Maximum messages per minute per channel
     #[serde(default = "default_max_messages_per_minute")]
     pub max_messages_per_minute: u32,
-    
+
     /// Maximum burst size (messages that can be sent immediately)
     #[serde(default = "default_burst_size")]
     pub burst_size: u32,
-    
+
     /// Whether to enable rate limiting
     #[serde(default = "default_true")]
     pub enabled: bool,
@@ -152,19 +152,19 @@ pub struct GlobalNotificationConfig {
     /// Minimum severity level to send notifications
     #[serde(default = "default_min_severity")]
     pub min_severity: String,
-    
+
     /// Maximum number of notifications to batch together
     #[serde(default = "default_batch_size")]
     pub batch_size: usize,
-    
+
     /// Batch timeout in seconds
     #[serde(default = "default_batch_timeout")]
     pub batch_timeout_seconds: u64,
-    
+
     /// Whether to enable notification batching
     #[serde(default)]
     pub enable_batching: bool,
-    
+
     /// Custom notification filters
     pub filters: Option<Vec<NotificationFilter>>,
 }
@@ -174,20 +174,20 @@ pub struct GlobalNotificationConfig {
 pub struct NotificationFilter {
     /// Filter name
     pub name: String,
-    
+
     /// Rule names to include/exclude
     pub rule_names: Option<Vec<String>>,
-    
+
     /// Program names to include/exclude
     pub program_names: Option<Vec<String>>,
-    
+
     /// Severity levels to include/exclude
     pub severities: Option<Vec<String>>,
-    
+
     /// Whether this is an include filter (true) or exclude filter (false)
     #[serde(default = "default_true")]
     pub include: bool,
-    
+
     /// Channels to apply this filter to
     pub channels: Option<Vec<String>>,
 }
@@ -199,36 +199,40 @@ impl NotifierConfig {
         if let Some(email) = &self.email {
             email.validate()?;
         }
-        
+
         // Validate Telegram config
         if let Some(telegram) = &self.telegram {
             telegram.validate()?;
         }
-        
+
         // Validate Slack config
         if let Some(slack) = &self.slack {
             slack.validate()?;
         }
-        
+
         // Validate Discord config
         if let Some(discord) = &self.discord {
             discord.validate()?;
         }
-        
+
         // Check that at least one notification channel is configured
-        if self.email.is_none() && self.telegram.is_none() && self.slack.is_none() && self.discord.is_none() {
+        if self.email.is_none()
+            && self.telegram.is_none()
+            && self.slack.is_none()
+            && self.discord.is_none()
+        {
             return Err(crate::NotifierError::Configuration(
                 "At least one notification channel must be configured".to_string(),
             ));
         }
-        
+
         Ok(())
     }
-    
+
     /// Get all configured channel names.
     pub fn enabled_channels(&self) -> Vec<String> {
         let mut channels = Vec::new();
-        
+
         if self.email.is_some() {
             channels.push("email".to_string());
         }
@@ -241,7 +245,7 @@ impl NotifierConfig {
         if self.discord.is_some() {
             channels.push("discord".to_string());
         }
-        
+
         channels
     }
 }
@@ -253,31 +257,31 @@ impl EmailConfig {
                 "SMTP server cannot be empty".to_string(),
             ));
         }
-        
+
         if self.username.is_empty() {
             return Err(crate::NotifierError::Configuration(
                 "SMTP username cannot be empty".to_string(),
             ));
         }
-        
+
         if self.password.is_empty() {
             return Err(crate::NotifierError::Configuration(
                 "SMTP password cannot be empty".to_string(),
             ));
         }
-        
+
         if self.from_address.is_empty() {
             return Err(crate::NotifierError::Configuration(
                 "From address cannot be empty".to_string(),
             ));
         }
-        
+
         if self.to_addresses.is_empty() {
             return Err(crate::NotifierError::Configuration(
                 "At least one recipient address must be specified".to_string(),
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -289,13 +293,13 @@ impl TelegramConfig {
                 "Telegram bot token cannot be empty".to_string(),
             ));
         }
-        
+
         if !["Markdown", "HTML", ""].contains(&self.parse_mode.as_str()) {
             return Err(crate::NotifierError::Configuration(
                 "Invalid Telegram parse mode. Must be 'Markdown', 'HTML', or empty".to_string(),
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -307,13 +311,13 @@ impl SlackConfig {
                 "Slack webhook URL cannot be empty".to_string(),
             ));
         }
-        
+
         if !self.webhook_url.starts_with("https://hooks.slack.com/") {
             return Err(crate::NotifierError::Configuration(
                 "Invalid Slack webhook URL format".to_string(),
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -325,13 +329,16 @@ impl DiscordConfig {
                 "Discord webhook URL cannot be empty".to_string(),
             ));
         }
-        
-        if !self.webhook_url.starts_with("https://discord.com/api/webhooks/") {
+
+        if !self
+            .webhook_url
+            .starts_with("https://discord.com/api/webhooks/")
+        {
             return Err(crate::NotifierError::Configuration(
                 "Invalid Discord webhook URL format".to_string(),
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -389,4 +396,4 @@ impl Default for GlobalNotificationConfig {
             filters: None,
         }
     }
-} 
+}

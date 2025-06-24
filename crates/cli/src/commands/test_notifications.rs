@@ -25,46 +25,35 @@ pub async fn test_notifications_command(
 
     println!("{}", style("Testing notification channels...").cyan());
 
-    // Test specific channel or all channels
-    let results = if let Some(channel_name) = channel {
-        let mut test_results = std::collections::HashMap::new();
-        
-        // Create a progress bar for single channel test
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .template("{spinner:.cyan} Testing {msg}...")
-                .unwrap()
-        );
-        pb.set_message(format!("{} channel", channel_name));
-        pb.enable_steady_tick(Duration::from_millis(100));
+    // Test all configured channels first
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.cyan} Testing channels...")
+            .unwrap(),
+    );
+    pb.enable_steady_tick(Duration::from_millis(100));
 
-        // Test the specific channel
-        let channel_results = notification_manager.test_channels().await;
-        
-        if let Some(result) = channel_results.get(&channel_name) {
-            test_results.insert(channel_name.clone(), result.clone());
+    let all_results = notification_manager.test_channels().await;
+
+    pb.finish_and_clear();
+
+    // Filter results if specific channel requested
+    let results = if let Some(channel_name) = &channel {
+        let mut filtered_results = std::collections::HashMap::new();
+
+        if let Some(result) = all_results.get(channel_name) {
+            filtered_results.insert(channel_name.clone(), result);
         } else {
-            pb.finish_with_message(format!("❌ Channel '{}' not configured", channel_name));
             anyhow::bail!("Channel '{}' is not configured", channel_name);
         }
-        
-        pb.finish_and_clear();
-        test_results
-    } else {
-        // Test all configured channels
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .template("{spinner:.cyan} Testing all channels...")
-                .unwrap()
-        );
-        pb.enable_steady_tick(Duration::from_millis(100));
 
-        let results = notification_manager.test_channels().await;
-        
-        pb.finish_and_clear();
-        results
+        filtered_results
+    } else {
+        all_results
+            .iter()
+            .map(|(k, v)| (k.clone(), v))
+            .collect::<std::collections::HashMap<_, _>>()
     };
 
     // Display results
@@ -76,7 +65,7 @@ pub async fn test_notifications_command(
 
     for (channel_name, result) in &results {
         total_count += 1;
-        
+
         match result {
             Ok(_) => {
                 success_count += 1;
@@ -110,11 +99,15 @@ pub async fn test_notifications_command(
     } else {
         println!(
             "{} {}/{} channel(s) passed tests",
-            if success_count > 0 { style("⚠️").yellow() } else { style("❌").red() },
+            if success_count > 0 {
+                style("⚠️").yellow()
+            } else {
+                style("❌").red()
+            },
             success_count,
             total_count
         );
-        
+
         if success_count == 0 {
             println!("\n{}", style("Troubleshooting tips:").bold().yellow());
             println!("• Check your configuration file for correct credentials");
@@ -131,7 +124,7 @@ pub async fn test_notifications_command(
         println!("Total sent: {}", stats.total_sent);
         println!("Total failed: {}", stats.total_failed);
         println!("Rate limited: {}", stats.rate_limited);
-        
+
         if !stats.sent_per_channel.is_empty() {
             println!("\nPer channel:");
             for (channel, count) in &stats.sent_per_channel {
@@ -145,4 +138,4 @@ pub async fn test_notifications_command(
     }
 
     Ok(())
-} 
+}

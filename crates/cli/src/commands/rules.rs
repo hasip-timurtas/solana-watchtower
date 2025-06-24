@@ -1,7 +1,10 @@
 use anyhow::Result;
 use console::style;
+use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
 use watchtower_engine::{
-    LiquidityDropRule, LargeTransactionRule, OracleDeviationRule, FailureRateRule
+    EventData, EventType, FailureRateRule, LargeTransactionRule, LiquidityDropRule,
+    OracleDeviationRule, ProgramEvent, Rule, RuleContext,
 };
 
 pub async fn rules_list_command() -> Result<()> {
@@ -9,10 +12,26 @@ pub async fn rules_list_command() -> Result<()> {
     println!("{}", "─".repeat(60));
 
     let rules = [
-        ("liquidity_drop", "Liquidity Drop Detection", "Monitors for sudden drops in liquidity pools"),
-        ("large_transaction", "Large Transaction Detection", "Flags unusually large transactions"),
-        ("oracle_deviation", "Oracle Price Deviation", "Detects price manipulation attempts"),
-        ("failure_rate", "High Failure Rate Detection", "Monitors transaction failure rates"),
+        (
+            "liquidity_drop",
+            "Liquidity Drop Detection",
+            "Monitors for sudden drops in liquidity pools",
+        ),
+        (
+            "large_transaction",
+            "Large Transaction Detection",
+            "Flags unusually large transactions",
+        ),
+        (
+            "oracle_deviation",
+            "Oracle Price Deviation",
+            "Detects price manipulation attempts",
+        ),
+        (
+            "failure_rate",
+            "High Failure Rate Detection",
+            "Monitors transaction failure rates",
+        ),
     ];
 
     for (name, title, description) in rules {
@@ -25,7 +44,10 @@ pub async fn rules_list_command() -> Result<()> {
         println!();
     }
 
-    println!("{}", style("Use 'watchtower rules info <rule_name>' for detailed information").dim());
+    println!(
+        "{}",
+        style("Use 'watchtower rules info <rule_name>' for detailed information").dim()
+    );
     Ok(())
 }
 
@@ -135,100 +157,104 @@ fn show_failure_rate_info() {
 }
 
 async fn test_liquidity_drop_rule() -> Result<()> {
-    use watchtower_engine::{SolanaEvent, TransactionEvent};
-    use solana_sdk::pubkey::Pubkey;
-    use std::str::FromStr;
-
     let rule = LiquidityDropRule::new(10.0, 300, 1000000);
-    
-    // Create test event
-    let test_event = SolanaEvent::Transaction(TransactionEvent {
-        signature: "test_signature".to_string(),
-        slot: 12345,
-        block_time: Some(chrono::Utc::now().timestamp()),
-        program_id: Pubkey::from_str("11111111111111111111111111111112").unwrap(),
-        accounts: vec![],
-        instruction_data: vec![],
-        success: true,
-        error: None,
-        fee: 5000,
-        pre_balances: vec![1000000000],  // 1 SOL before
-        post_balances: vec![900000000],  // 0.9 SOL after (10% drop)
-        pre_token_balances: vec![],
-        post_token_balances: vec![],
-        log_messages: vec![],
-        compute_units_consumed: Some(10000),
-    });
 
-    println!("{}", style("Creating test transaction with 10% liquidity drop...").dim());
-    
-    match rule.evaluate(&test_event).await {
-        Ok(Some(alert)) => {
-            println!("{} Rule triggered alert:", style("✓").green().bold());
-            println!("  Severity: {:?}", alert.severity);
-            println!("  Message: {}", alert.message);
-            println!("  Metadata: {:?}", alert.metadata);
+    // Create test event with token transfer data
+    let test_event = ProgramEvent::new(
+        Pubkey::from_str("11111111111111111111111111111112").unwrap(),
+        "Test Program".to_string(),
+        EventType::TokenTransfer,
+        EventData::TokenTransfer {
+            from: Pubkey::new_unique(),
+            to: Pubkey::new_unique(),
+            amount: 100000, // Large amount to trigger liquidity drop
+            mint: Pubkey::new_unique(),
+            decimals: 6,
+        },
+    )
+    .with_slot(12345);
+
+    // Create test context with historical data
+    let context = RuleContext::default();
+
+    println!(
+        "{}",
+        style("Creating test token transfer with potential liquidity impact...").dim()
+    );
+
+    let result = rule.evaluate(&test_event, &context).await;
+
+    if result.triggered {
+        println!("{} Rule triggered alert:", style("✓").green().bold());
+        println!("  Severity: {:?}", result.severity);
+        if let Some(message) = &result.message {
+            println!("  Message: {}", message);
         }
-        Ok(None) => {
-            println!("{} Rule did not trigger (threshold not met)", style("ⓘ").blue());
-        }
-        Err(e) => {
-            println!("{} Rule evaluation failed: {}", style("✗").red().bold(), e);
-        }
+        println!("  Confidence: {:.2}", result.confidence);
+        println!("  Metadata: {:?}", result.metadata);
+    } else {
+        println!(
+            "{} Rule did not trigger (no significant liquidity drop detected)",
+            style("ⓘ").blue()
+        );
     }
 
     Ok(())
 }
 
 async fn test_large_transaction_rule() -> Result<()> {
-    use watchtower_engine::{SolanaEvent, TransactionEvent};
-    use solana_sdk::pubkey::Pubkey;
-    use std::str::FromStr;
-
     let rule = LargeTransactionRule::new(1.0, 500000);
-    
-    let test_event = SolanaEvent::Transaction(TransactionEvent {
-        signature: "test_signature_large".to_string(),
-        slot: 12346,
-        block_time: Some(chrono::Utc::now().timestamp()),
-        program_id: Pubkey::from_str("11111111111111111111111111111112").unwrap(),
-        accounts: vec![],
-        instruction_data: vec![],
-        success: true,
-        error: None,
-        fee: 5000,
-        pre_balances: vec![100_000_000_000],  // 100 SOL
-        post_balances: vec![50_000_000_000],  // 50 SOL (large transfer)
-        pre_token_balances: vec![],
-        post_token_balances: vec![],
-        log_messages: vec![],
-        compute_units_consumed: Some(20000),
-    });
 
-    println!("{}", style("Creating test transaction with large value transfer...").dim());
-    
-    match rule.evaluate(&test_event).await {
-        Ok(Some(alert)) => {
-            println!("{} Rule triggered alert:", style("✓").green().bold());
-            println!("  Severity: {:?}", alert.severity);
-            println!("  Message: {}", alert.message);
+    // Create test event with large token transfer
+    let test_event = ProgramEvent::new(
+        Pubkey::from_str("11111111111111111111111111111112").unwrap(),
+        "Test Program".to_string(),
+        EventType::TokenTransfer,
+        EventData::TokenTransfer {
+            from: Pubkey::new_unique(),
+            to: Pubkey::new_unique(),
+            amount: 1_000_000, // Large amount above threshold
+            mint: Pubkey::new_unique(),
+            decimals: 6,
+        },
+    )
+    .with_slot(12346);
+
+    // Create test context
+    let context = RuleContext::default();
+
+    println!(
+        "{}",
+        style("Creating test transaction with large value transfer...").dim()
+    );
+
+    let result = rule.evaluate(&test_event, &context).await;
+
+    if result.triggered {
+        println!("{} Rule triggered alert:", style("✓").green().bold());
+        println!("  Severity: {:?}", result.severity);
+        if let Some(message) = &result.message {
+            println!("  Message: {}", message);
         }
-        Ok(None) => {
-            println!("{} Rule did not trigger", style("ⓘ").blue());
-        }
-        Err(e) => {
-            println!("{} Rule evaluation failed: {}", style("✗").red().bold(), e);
-        }
+        println!("  Confidence: {:.2}", result.confidence);
+    } else {
+        println!("{} Rule did not trigger", style("ⓘ").blue());
     }
 
     Ok(())
 }
 
 async fn test_oracle_deviation_rule() -> Result<()> {
-    let rule = OracleDeviationRule::new(5.0, "reference_oracle".to_string());
-    
-    println!("{}", style("Oracle rule test requires live price data").dim());
-    println!("{} Oracle deviation rule configured successfully", style("✓").green());
+    let _rule = OracleDeviationRule::new(5.0, "reference_oracle".to_string());
+
+    println!(
+        "{}",
+        style("Oracle rule test requires live price data").dim()
+    );
+    println!(
+        "{} Oracle deviation rule configured successfully",
+        style("✓").green()
+    );
     println!("  Threshold: 5%");
     println!("  Reference: reference_oracle");
 
@@ -236,44 +262,63 @@ async fn test_oracle_deviation_rule() -> Result<()> {
 }
 
 async fn test_failure_rate_rule() -> Result<()> {
-    use watchtower_engine::{SolanaEvent, TransactionEvent};
-    use solana_sdk::pubkey::Pubkey;
-    use std::str::FromStr;
-
     let rule = FailureRateRule::new(25.0, 10, 300);
-    
-    println!("{}", style("Creating test transactions with high failure rate...").dim());
-    
-    // Simulate multiple failed transactions
+
+    println!(
+        "{}",
+        style("Creating test transactions with high failure rate...").dim()
+    );
+
+    // Create a context with multiple failed transactions
+    let mut context = RuleContext::default();
+
+    // Add historical failed transactions to context
     for i in 0..15 {
         let success = i < 5; // 5 successful, 10 failed = 66% failure rate
-        
-        let test_event = SolanaEvent::Transaction(TransactionEvent {
-            signature: format!("test_signature_{}", i),
-            slot: 12347 + i as u64,
-            block_time: Some(chrono::Utc::now().timestamp()),
-            program_id: Pubkey::from_str("11111111111111111111111111111112").unwrap(),
-            accounts: vec![],
-            instruction_data: vec![],
-            success,
-            error: if success { None } else { Some("Insufficient funds".to_string()) },
-            fee: 5000,
-            pre_balances: vec![1000000000],
-            post_balances: vec![1000000000],
-            pre_token_balances: vec![],
-            post_token_balances: vec![],
-            log_messages: vec![],
-            compute_units_consumed: Some(5000),
-        });
 
-        if let Ok(Some(alert)) = rule.evaluate(&test_event).await {
-            println!("{} Rule triggered alert after {} transactions:", style("✓").green().bold(), i + 1);
-            println!("  Severity: {:?}", alert.severity);
-            println!("  Message: {}", alert.message);
-            return Ok(());
-        }
+        let test_event = ProgramEvent::new(
+            Pubkey::from_str("11111111111111111111111111111112").unwrap(),
+            "Test Program".to_string(),
+            EventType::Transaction,
+            EventData::Transaction {
+                signature: solana_sdk::signature::Signature::new_unique(),
+                success,
+                compute_units: Some(5000),
+                fee: 5000,
+            },
+        )
+        .with_slot(12347 + i as u64);
+
+        context.recent_events.push(test_event);
     }
-    
-    println!("{} Rule did not trigger with test data", style("ⓘ").blue());
+
+    // Create a current transaction event to evaluate
+    let current_event = ProgramEvent::new(
+        Pubkey::from_str("11111111111111111111111111111112").unwrap(),
+        "Test Program".to_string(),
+        EventType::Transaction,
+        EventData::Transaction {
+            signature: solana_sdk::signature::Signature::new_unique(),
+            success: false, // This is a failed transaction
+            compute_units: Some(5000),
+            fee: 5000,
+        },
+    )
+    .with_slot(12362);
+
+    let result = rule.evaluate(&current_event, &context).await;
+
+    if result.triggered {
+        println!("{} Rule triggered alert:", style("✓").green().bold());
+        println!("  Severity: {:?}", result.severity);
+        if let Some(message) = &result.message {
+            println!("  Message: {}", message);
+        }
+        println!("  Confidence: {:.2}", result.confidence);
+        println!("  Metadata: {:?}", result.metadata);
+    } else {
+        println!("{} Rule did not trigger with test data", style("ⓘ").blue());
+    }
+
     Ok(())
-} 
+}

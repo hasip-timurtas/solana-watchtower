@@ -39,4 +39,7 @@ reqwest = { version = "0.11", features = ["json"] }
 hyper = { version = "0.14", features = ["full"] }
 url = "2.4"
 chrono = { version = "0.4", features = ["serde"] }
-libc = "0.2" 
+libc = "0.2"
+solana-sdk = "1.18"
+uuid = { version = "1.0", features = ["v4"] }
+tempfile = "3.0" 

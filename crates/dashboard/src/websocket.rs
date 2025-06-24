@@ -6,7 +6,7 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 use uuid::Uuid;
-use watchtower_engine::{Alert, AlertManager};
+use watchtower_engine::AlertManager;
 
 /// WebSocket connection info
 #[derive(Debug, Clone)]
@@ -67,7 +67,11 @@ pub async fn handle_websocket(socket: WebSocket, state: AppState) {
         last_ping: std::time::Instant::now(),
     };
 
-    state.ws_connections.write().await.insert(connection_id.clone(), connection);
+    state
+        .ws_connections
+        .write()
+        .await
+        .insert(connection_id.clone(), connection);
 
     // Task to send messages from the channel to WebSocket
     let send_task = tokio::spawn(async move {
@@ -94,11 +98,13 @@ pub async fn handle_websocket(socket: WebSocket, state: AppState) {
         while let Some(msg) = receiver.next().await {
             match msg {
                 Ok(Message::Text(text)) => {
-                    if let Err(e) = handle_websocket_message(&text, &connection_id_clone, &ws_connections).await {
+                    if let Err(e) =
+                        handle_websocket_message(&text, &connection_id_clone, &ws_connections).await
+                    {
                         error!("Error handling WebSocket message: {}", e);
                     }
                 }
-                Ok(Message::Ping(ping)) => {
+                Ok(Message::Ping(_ping)) => {
                     info!("Received ping from {}", connection_id_clone);
                     // Axum handles pong automatically
                 }
@@ -107,7 +113,10 @@ pub async fn handle_websocket(socket: WebSocket, state: AppState) {
                     break;
                 }
                 Err(e) => {
-                    error!("WebSocket error for connection {}: {}", connection_id_clone, e);
+                    error!(
+                        "WebSocket error for connection {}: {}",
+                        connection_id_clone, e
+                    );
                     break;
                 }
                 _ => {}
@@ -186,17 +195,17 @@ pub async fn websocket_heartbeat_task(
     ws_connections: Arc<RwLock<HashMap<String, WebSocketConnection>>>,
 ) {
     let mut interval = tokio::time::interval(Duration::from_secs(30));
-    
+
     loop {
         interval.tick().await;
-        
+
         let ping_message = WebSocketMessage::Ping;
         broadcast_to_websockets(ping_message, &ws_connections).await;
 
         // Remove stale connections (no pong received in last 60 seconds)
         let now = std::time::Instant::now();
         let mut stale_connections = Vec::new();
-        
+
         {
             let connections = ws_connections.read().await;
             for (connection_id, connection) in connections.iter() {
@@ -222,7 +231,7 @@ pub async fn alert_broadcast_task(
     ws_connections: Arc<RwLock<HashMap<String, WebSocketConnection>>>,
 ) {
     let mut alert_receiver = alert_manager.subscribe();
-    
+
     while let Ok(alert) = alert_receiver.recv().await {
         let notification = AlertNotification {
             id: alert.id.clone(),
@@ -254,4 +263,4 @@ pub async fn send_metrics_update(
 ) {
     let message = WebSocketMessage::Metrics { data: metrics };
     broadcast_to_websockets(message, ws_connections).await;
-} 
+}

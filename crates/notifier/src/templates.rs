@@ -1,7 +1,7 @@
 //! Template engine for rendering notification messages.
 
 use crate::{NotifierError, NotifierResult};
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::collections::HashMap;
 use tera::{Context, Tera};
 use watchtower_engine::Alert;
@@ -16,15 +16,28 @@ impl TemplateEngine {
     /// Create a new template engine.
     pub fn new() -> Self {
         let mut tera = Tera::default();
-        
+
         // Add built-in templates
         tera.add_raw_templates(vec![
-            ("email_default", include_str!("../templates/email_default.html")),
+            (
+                "email_default",
+                include_str!("../templates/email_default.html"),
+            ),
             ("email_batch", include_str!("../templates/email_batch.html")),
-            ("telegram_default", include_str!("../templates/telegram_default.md")),
-            ("slack_default", include_str!("../templates/slack_default.txt")),
-            ("discord_default", include_str!("../templates/discord_default.txt")),
-        ]).unwrap_or_else(|e| {
+            (
+                "telegram_default",
+                include_str!("../templates/telegram_default.md"),
+            ),
+            (
+                "slack_default",
+                include_str!("../templates/slack_default.txt"),
+            ),
+            (
+                "discord_default",
+                include_str!("../templates/discord_default.txt"),
+            ),
+        ])
+        .unwrap_or_else(|e| {
             tracing::warn!("Failed to load built-in templates: {}", e);
         });
 
@@ -32,9 +45,13 @@ impl TemplateEngine {
     }
 
     /// Render a template with the given data.
-    pub fn render_template(&self, template_str: &str, data: &HashMap<String, Value>) -> NotifierResult<String> {
+    pub fn render_template(
+        &self,
+        template_str: &str,
+        data: &HashMap<String, Value>,
+    ) -> NotifierResult<String> {
         let context = Context::from_serialize(data)?;
-        
+
         // Create a temporary Tera instance for inline template rendering
         let mut temp_tera = Tera::default();
         match temp_tera.render_str(template_str, &context) {
@@ -46,7 +63,7 @@ impl TemplateEngine {
     /// Render default email template for an alert.
     pub fn render_default_email_template(&self, alert: &Alert) -> NotifierResult<String> {
         let context = self.create_alert_context(alert)?;
-        
+
         match self.tera.render("email_default", &context) {
             Ok(rendered) => Ok(rendered),
             Err(_) => {
@@ -75,7 +92,7 @@ impl TemplateEngine {
     /// Render default Telegram template for an alert.
     pub fn render_default_telegram_template(&self, alert: &Alert) -> NotifierResult<String> {
         let context = self.create_alert_context(alert)?;
-        
+
         match self.tera.render("telegram_default", &context) {
             Ok(rendered) => Ok(rendered),
             Err(_) => {
@@ -88,7 +105,7 @@ impl TemplateEngine {
     /// Render default Slack template for an alert.
     pub fn render_default_slack_template(&self, alert: &Alert) -> NotifierResult<String> {
         let context = self.create_alert_context(alert)?;
-        
+
         match self.tera.render("slack_default", &context) {
             Ok(rendered) => Ok(rendered),
             Err(_) => {
@@ -101,7 +118,7 @@ impl TemplateEngine {
     /// Render default Discord template for an alert.
     pub fn render_default_discord_template(&self, alert: &Alert) -> NotifierResult<String> {
         let context = self.create_alert_context(alert)?;
-        
+
         match self.tera.render("discord_default", &context) {
             Ok(rendered) => Ok(rendered),
             Err(_) => {
@@ -114,7 +131,7 @@ impl TemplateEngine {
     /// Create template context from alert data.
     fn create_alert_context(&self, alert: &Alert) -> NotifierResult<Context> {
         let mut context = Context::new();
-        
+
         context.insert("alert", alert);
         context.insert("alert_id", &alert.id);
         context.insert("rule_name", &alert.rule_name);
@@ -125,10 +142,13 @@ impl TemplateEngine {
         context.insert("program_name", &alert.program_name);
         context.insert("confidence", &(alert.confidence * 100.0));
         context.insert("timestamp", &alert.timestamp.to_rfc3339());
-        context.insert("timestamp_human", &alert.timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string());
+        context.insert(
+            "timestamp_human",
+            &alert.timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string(),
+        );
         context.insert("suggested_actions", &alert.suggested_actions);
         context.insert("metadata", &alert.metadata);
-        
+
         // Add severity-specific styling
         let severity_color = match alert.severity {
             watchtower_engine::AlertSeverity::Critical => "#FF0000",
@@ -138,7 +158,7 @@ impl TemplateEngine {
             watchtower_engine::AlertSeverity::Info => "#87CEEB",
         };
         context.insert("severity_color", &severity_color);
-        
+
         let severity_emoji = match alert.severity {
             watchtower_engine::AlertSeverity::Critical => "🔴",
             watchtower_engine::AlertSeverity::High => "🟠",
@@ -147,7 +167,7 @@ impl TemplateEngine {
             watchtower_engine::AlertSeverity::Info => "🔵",
         };
         context.insert("severity_emoji", &severity_emoji);
-        
+
         Ok(context)
     }
 
@@ -217,7 +237,9 @@ impl TemplateEngine {
                         <div class="label">Suggested Actions:</div>
                         <ul>{}</ul>
                     </div>"#,
-                    alert.suggested_actions.iter()
+                    alert
+                        .suggested_actions
+                        .iter()
                         .map(|action| format!("<li>{}</li>", action))
                         .collect::<Vec<_>>()
                         .join("")
@@ -362,4 +384,4 @@ impl Default for TemplateEngine {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

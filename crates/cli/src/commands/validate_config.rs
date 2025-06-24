@@ -1,5 +1,5 @@
 use crate::config::AppConfig;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use console::style;
 use std::path::PathBuf;
 
@@ -51,14 +51,8 @@ pub async fn validate_config_command(config_path: PathBuf) -> Result<()> {
     println!("{}", "─".repeat(40));
 
     // Subscriber info
-    println!(
-        "RPC URL: {}",
-        style(&config.subscriber.rpc_url).cyan()
-    );
-    println!(
-        "WebSocket URL: {}",
-        style(&config.subscriber.ws_url).cyan()
-    );
+    println!("RPC URL: {}", style(&config.subscriber.rpc_url).cyan());
+    println!("WebSocket URL: {}", style(&config.subscriber.ws_url).cyan());
     println!(
         "Programs monitored: {}",
         style(config.subscriber.programs.len()).cyan()
@@ -186,7 +180,7 @@ async fn validate_notifier_config(config: &AppConfig) -> Result<()> {
     println!("{}", style("Validating notifier configuration...").cyan());
 
     let enabled_channels = config.notifier.enabled_channels();
-    
+
     if enabled_channels.is_empty() {
         println!(
             "{} No notification channels configured",
@@ -196,10 +190,10 @@ async fn validate_notifier_config(config: &AppConfig) -> Result<()> {
     }
 
     // Validate rate limiting
-    if config.notifier.rate_limiting.enabled {
-        if config.notifier.rate_limiting.max_messages_per_minute == 0 {
-            anyhow::bail!("max_messages_per_minute cannot be zero when rate limiting is enabled");
-        }
+    if config.notifier.rate_limiting.enabled
+        && config.notifier.rate_limiting.max_messages_per_minute == 0
+    {
+        anyhow::bail!("max_messages_per_minute cannot be zero when rate limiting is enabled");
     }
 
     // Check notification filters
@@ -245,4 +239,4 @@ async fn validate_dashboard_config(config: &AppConfig) -> Result<()> {
 
     println!("{} Dashboard configuration is valid", style("✓").green());
     Ok(())
-} 
+}

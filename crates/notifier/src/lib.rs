@@ -19,4 +19,4 @@ pub use channels::*;
 pub use config::*;
 pub use error::*;
 pub use manager::*;
-pub use templates::*; 
+pub use templates::*;
