@@ -1,0 +1,17 @@
+{{ severity_emoji }} *Solana Watchtower Alert*
+
+*Severity:* {{ severity_upper }}
+*Rule:* `{{ rule_name }}`
+*Program:* `{{ program_name }}`
+*Message:* {{ message }}
+*Confidence:* {{ confidence }}%
+*Time:* {{ timestamp_human }}
+
+{% if suggested_actions -%}
+*Suggested Actions:*
+{% for action in suggested_actions -%}
+• {{ action }}
+{% endfor %}
+{%- endif %}
+
+_Alert ID: {{ alert_id }}_ 

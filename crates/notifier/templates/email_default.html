@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Solana Watchtower Alert</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f8f9fa; 
+            color: #333;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background-color: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header { 
+            background: linear-gradient(135deg, {{ severity_color }}, {{ severity_color }}dd);
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center;
+        }
+        .header h1 { 
+            margin: 0 0 10px 0; 
+            font-size: 24px; 
+            font-weight: 600;
+        }
+        .header h2 { 
+            margin: 0; 
+            font-size: 18px; 
+            font-weight: 400; 
+            opacity: 0.9;
+        }
+        .content { 
+            padding: 30px 20px; 
+        }
+        .alert-badge {
+            display: inline-block;
+            background-color: {{ severity_color }};
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .field { 
+            margin-bottom: 20px; 
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .field:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .label { 
+            font-weight: 600; 
+            color: #495057; 
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .value { 
+            color: #6c757d; 
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .code {
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            border-left: 3px solid {{ severity_color }};
+        }
+        .actions { 
+            background-color: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-top: 25px;
+            border-left: 4px solid #007bff;
+        }
+        .actions .label {
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .actions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .actions li {
+            margin-bottom: 8px;
+            color: #495057;
+        }
+        .metadata {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Solana Watchtower</h1>
+            <h2>Security Alert Notification</h2>
+        </div>
+        <div class="content">
+            <div class="alert-badge">{{ severity_upper }} Alert</div>
+            
+            <div class="field">
+                <span class="label">Rule Triggered</span>
+                <div class="value code">{{ rule_name }}</div>
+            </div>
+            
+            <div class="field">
+                <span class="label">Program</span>
+                <div class="value">{{ program_name }}</div>
+                <div style="font-size: 12px; color: #adb5bd; margin-top: 5px;">{{ program_id }}</div>
+            </div>
+            
+            <div class="field">
+                <span class="label">Alert Message</span>
+                <div class="value">{{ message }}</div>
+            </div>
+            
+            <div class="field">
+                <span class="label">Confidence Level</span>
+                <div class="value">{{ confidence }}%</div>
+            </div>
+            
+            <div class="field">
+                <span class="label">Timestamp</span>
+                <div class="value">{{ timestamp_human }}</div>
+            </div>
+            
+            {% if suggested_actions %}
+            <div class="actions">
+                <div class="label">💡 Suggested Actions</div>
+                <ul>
+                    {% for action in suggested_actions %}
+                    <li>{{ action }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            {% if metadata %}
+            <div class="field">
+                <span class="label">Additional Details</span>
+                <div class="metadata">
+                    {% for key, value in metadata %}
+                    <div style="margin-bottom: 8px;">
+                        <strong>{{ key }}:</strong> {{ value }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>This alert was generated by Solana Watchtower</p>
+            <p>Alert ID: {{ alert_id }}</p>
+        </div>
+    </div>
+</body>
+</html> 
