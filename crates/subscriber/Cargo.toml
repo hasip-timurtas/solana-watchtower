@@ -1,0 +1,33 @@
+[package]
+name = "watchtower-subscriber"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Real-time Solana program event subscriber via WebSocket and Geyser"
+
+[dependencies]
+# Workspace dependencies
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+url = { workspace = true }
+bincode = { workspace = true }
+
+# Solana dependencies
+solana-client = { workspace = true }
+solana-sdk = { workspace = true }
+solana-transaction-status = { workspace = true }
+solana-account-decoder = { workspace = true }
+solana-program = { workspace = true }
+
+# Additional dependencies
+futures-util = "0.3"
+base64 = "0.21" 

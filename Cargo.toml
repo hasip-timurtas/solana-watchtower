@@ -1,0 +1,76 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/subscriber",
+    "crates/engine", 
+    "crates/notifier",
+    "crates/cli",
+    "crates/dashboard"
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+authors = ["Hasip Timurtas <hasiptimurtas@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/hasip-timurtas/solana-watchtower"
+homepage = "https://github.com/hasip-timurtas/solana-watchtower"
+description = "End-to-end monitoring and alert system for deployed Solana programs"
+keywords = ["solana", "monitoring", "alerts", "blockchain", "defi"]
+categories = ["web-programming", "network-programming", "cryptography"]
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+bincode = "1.3"
+
+# Solana
+solana-client = "1.16"
+solana-sdk = "1.16"
+solana-transaction-status = "1.16"
+solana-account-decoder = "1.16"
+solana-program = "1.16"
+
+# HTTP/WebSocket
+reqwest = { version = "0.11", features = ["json"] }
+url = "2.5"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Time and collections
+chrono = { version = "0.4", features = ["serde"] }
+dashmap = "5.5"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Metrics
+prometheus = "0.13"
+
+# Email
+lettre = "0.11"
+
+# Configuration validation
+config = "0.14"
+validator = { version = "0.16", features = ["derive"] }
+
+# Database (optional for persistence)
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"], optional = true }
+
+[workspace.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"] 

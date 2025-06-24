@@ -1,0 +1,30 @@
+[package]
+name = "watchtower-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Rule engine and metrics aggregator for Solana program monitoring"
+
+[dependencies]
+# Workspace dependencies
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+dashmap = { workspace = true }
+uuid = { workspace = true }
+prometheus = { workspace = true }
+
+# Solana dependencies  
+solana-sdk = { workspace = true }
+solana-program = { workspace = true }
+
+# Additional dependencies
+async-trait = "0.1"
+ordered-float = "4.2" 

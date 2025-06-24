@@ -1,0 +1,33 @@
+[package]
+name = "watchtower-dashboard"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Web dashboard backend for Solana Watchtower monitoring system"
+
+[dependencies]
+# Workspace dependencies
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+prometheus = { workspace = true }
+
+# Local workspace crates
+watchtower-engine = { path = "../engine" }
+
+# Web framework dependencies
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+hyper = "1.0"
+
+# Additional dependencies
+askama = "0.12"
+mime_guess = "2.0" 
