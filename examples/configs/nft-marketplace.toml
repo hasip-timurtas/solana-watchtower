@@ -1,0 +1,94 @@
+# NFT Marketplace Focused Solana Watchtower Configuration
+# Specialized monitoring for NFT marketplaces, trading, and metadata operations
+
+[network]
+cluster = "mainnet-beta"
+rpc_url = "https://api.mainnet-beta.solana.com"
+ws_url = "wss://api.mainnet-beta.solana.com"
+
+[monitoring]
+event_buffer_size = 15000
+rule_evaluation_interval = 20
+enable_debug_logs = false
+
+# Metaplex Token Metadata - Core NFT standard
+[[programs]]
+name = "metaplex-metadata"
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+description = "Metaplex Token Metadata - NFT creation and updates"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 100000000  # 0.1 SOL
+instruction_types = ["CreateMetadataAccount", "UpdateMetadataAccount", "VerifyCollection"]
+
+# Magic Eden - Popular NFT marketplace
+[[programs]]
+name = "magic-eden"
+address = "M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K"
+description = "Magic Eden Marketplace - NFT trading"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 500000000  # 0.5 SOL
+
+# Solana NFT marketplace rules
+[[rules]]
+name = "high-value-nft-sale"
+type = "transaction_size"
+description = "Monitor high-value NFT sales"
+threshold = 100000000000  # 100 SOL
+window = "5m"
+severity = "medium"
+enabled = true
+
+[[rules]]
+name = "nft-trading-spike"
+type = "transaction_frequency"
+description = "Unusual NFT trading activity"
+threshold = 500
+window = "10m"
+severity = "low"
+enabled = true
+
+# NFT notifications
+[notifications]
+batch_size = 10
+batch_timeout = 180
+rate_limit_per_hour = 200
+
+[[notifications.channels]]
+name = "nft-alerts-discord"
+type = "discord"
+enabled = true
+webhook_url = "https://discord.com/api/webhooks/YOUR/NFT/WEBHOOK"
+[notifications.channels.filter]
+severity = ["medium", "high", "critical"]
+
+[metrics]
+enabled = true
+port = 9090
+retention_days = 7
+
+[dashboard]
+enabled = true
+host = "0.0.0.0"
+port = 8080
+enable_websocket = true
+
+[security]
+api_key = "nft-monitoring-key"
+cors_origins = ["https://nft-dashboard.example.com"]
+
+[logging]
+level = "info"
+targets = ["console", "file"]
+file_path = "/app/logs/nft-watchtower.log"
+rotation = "daily"
+retention_days = 30 

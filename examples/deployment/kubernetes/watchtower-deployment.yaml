@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solana-watchtower
+  namespace: monitoring
+  labels:
+    app: solana-watchtower
+    component: monitoring
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: solana-watchtower
+  template:
+    metadata:
+      labels:
+        app: solana-watchtower
+        component: monitoring
+    spec:
+      containers:
+      - name: watchtower
+        image: solana-watchtower:latest
+        ports:
+        - containerPort: 8080
+          name: dashboard
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: RUST_LOG
+          value: "info"
+        - name: SOLANA_RPC_URL
+          valueFrom:
+            secretKeyRef:
+              name: solana-config
+              key: rpc-url
+        - name: SOLANA_WS_URL
+          valueFrom:
+            secretKeyRef:
+              name: solana-config
+              key: ws-url
+        - name: CONFIG_PATH
+          value: "/app/configs/watchtower.toml"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/configs
+          readOnly: true
+        - name: data-volume
+          mountPath: /app/data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: watchtower-config
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: watchtower-data
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: solana-watchtower-service
+  namespace: monitoring
+  labels:
+    app: solana-watchtower
+spec:
+  selector:
+    app: solana-watchtower
+  ports:
+  - name: dashboard
+    port: 8080
+    targetPort: 8080
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: watchtower-data
+  namespace: monitoring
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd 

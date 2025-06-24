@@ -1,0 +1,92 @@
+{
+  "template_name": "defi_alert",
+  "description": "DeFi-focused alert template for Slack notifications",
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "🚨 DeFi Alert: {{alert.severity | upper}}",
+        "emoji": true
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Rule:* {{alert.rule_name}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Severity:* {{alert.severity}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Program:* {{alert.program_name}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Time:* {{alert.timestamp}}"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Description:*\n{{alert.description}}"
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Transaction:* <https://solscan.io/tx/{{alert.signature}}|{{alert.signature | truncate(16)}}>"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Block:* {{alert.block_height}}"
+        }
+      ]
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "💰 *Amount:* {{alert.metadata.amount_sol | default('N/A')}} SOL"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "📊 *Protocol:* {{alert.metadata.protocol | default('Unknown')}}"
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "View Transaction",
+            "emoji": true
+          },
+          "url": "https://solscan.io/tx/{{alert.signature}}",
+          "style": "primary"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Dashboard",
+            "emoji": true
+          },
+          "url": "{{dashboard_url}}/alerts/{{alert.id}}"
+        }
+      ]
+    }
+  ]
+} 

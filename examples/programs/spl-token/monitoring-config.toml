@@ -1,0 +1,105 @@
+# SPL Token Program Monitoring Configuration
+# Focused monitoring setup for SPL Token operations
+
+[network]
+cluster = "mainnet-beta"
+rpc_url = "https://api.mainnet-beta.solana.com"
+ws_url = "wss://api.mainnet-beta.solana.com"
+
+[monitoring]
+event_buffer_size = 20000
+rule_evaluation_interval = 30
+enable_debug_logs = false
+
+# SPL Token Program
+[[programs]]
+name = "spl-token"
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+description = "SPL Token Program - Core token operations"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true
+
+[programs.filters]
+# Monitor significant token operations
+min_transaction_value = 1000000000  # 1 SOL
+instruction_types = [
+    "Transfer",
+    "MintTo", 
+    "Burn",
+    "InitializeMint",
+    "InitializeAccount",
+    "CloseAccount",
+    "FreezeAccount",
+    "ThawAccount",
+    "SetAuthority"
+]
+
+# SPL Token specific rules
+[[rules]]
+name = "large-token-transfer"
+type = "transaction_size"
+description = "Monitor large token transfers"
+threshold = 100000000000  # 100 SOL
+window = "5m"
+severity = "medium"
+enabled = true
+
+[[rules]]
+name = "massive-mint-event"
+type = "mint_volume"
+description = "Large token minting events"
+threshold = 1000000000000  # 1000 SOL worth
+window = "10m"
+severity = "high"
+enabled = true
+
+[[rules]]
+name = "burn-activity"
+type = "burn_volume"
+description = "Significant token burning"
+threshold = 10000000000  # 10 SOL worth
+window = "15m"
+severity = "low"
+enabled = true
+
+[[rules]]
+name = "authority-changes"
+type = "authority_change"
+description = "Token authority modifications"
+threshold = 1  # Any authority change
+window = "1m"
+severity = "high"
+enabled = true
+
+# Notifications
+[notifications]
+batch_size = 15
+batch_timeout = 300
+rate_limit_per_hour = 200
+
+[[notifications.channels]]
+name = "token-alerts"
+type = "slack"
+enabled = true
+webhook_url = "https://hooks.slack.com/services/YOUR/TOKEN/WEBHOOK"
+[notifications.channels.filter]
+severity = ["high", "critical"]
+
+[metrics]
+enabled = true
+port = 9090
+retention_days = 14
+
+[dashboard]
+enabled = true
+host = "0.0.0.0"
+port = 8080
+enable_websocket = true
+
+[logging]
+level = "info"
+targets = ["console", "file"]
+rotation = "daily"
+retention_days = 30 
