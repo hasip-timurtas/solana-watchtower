@@ -340,7 +340,7 @@ impl MonitoringEngine {
         result.duration = start_time.elapsed();
         
         // Record processing latency
-        self.metrics.histograms.event_processing_latency.observe(result.duration.as_secs_f64());
+        self.metrics.record_event_processing_time(result.duration.as_secs_f64());
         
         if self.config.debug_logging {
             debug!(

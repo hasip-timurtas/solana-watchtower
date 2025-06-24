@@ -265,7 +265,7 @@ impl AlertManager {
             
             // Add to history
             let mut history = self.history.write().await;
-            history.push(resolved_alert);
+            history.push(resolved_alert.clone());
             
             // Limit history size
             if history.len() > self.config.max_history_size {

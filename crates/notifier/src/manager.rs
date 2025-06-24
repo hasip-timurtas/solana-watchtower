@@ -22,7 +22,7 @@ pub struct NotificationManager {
     channels: HashMap<String, Box<dyn NotificationChannel>>,
     
     /// Rate limiters per channel
-    rate_limiters: HashMap<String, RateLimiter<governor::clock::DefaultClock, governor::state::InMemoryState, governor::state::NotKeyed>>,
+    rate_limiters: HashMap<String, RateLimiter<governor::state::NotKeyed, governor::state::InMemoryState, governor::clock::DefaultClock>>,
     
     /// Configuration
     config: NotifierConfig,

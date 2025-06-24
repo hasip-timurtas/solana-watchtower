@@ -4,8 +4,7 @@ members = [
     "crates/subscriber",
     "crates/engine", 
     "crates/notifier",
-    "crates/cli",
-    "crates/dashboard"
+    "crates/cli"
 ]
 
 [workspace.package]
@@ -68,8 +67,8 @@ lettre = "0.11"
 config = "0.14"
 validator = { version = "0.16", features = ["derive"] }
 
-# Database (optional for persistence)
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"], optional = true }
+# Database for persistence
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
 
 [workspace.metadata.docs.rs]
 all-features = true

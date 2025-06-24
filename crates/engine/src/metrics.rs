@@ -274,7 +274,7 @@ impl MetricsCollector {
         // Collect Prometheus metrics
         let metric_families = self.registry.gather();
         for family in metric_families {
-            for metric in &family.metric {
+            for metric in family.get_metric() {
                 let name = if metric.label.is_empty() {
                     family.name.clone()
                 } else {

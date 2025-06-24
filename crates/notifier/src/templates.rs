@@ -32,7 +32,7 @@ impl TemplateEngine {
     }
 
     /// Render a template with the given data.
-    pub fn render_template(&self, template_str: &str, data: &HashMap<String, Value>) -> NotifierResult<String> {
+    pub fn render_template(&mut self, template_str: &str, data: &HashMap<String, Value>) -> NotifierResult<String> {
         let context = Context::from_serialize(data)?;
         
         // Try to render as inline template first
