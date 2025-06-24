@@ -9,6 +9,14 @@ pub enum NotifierError {
     #[error("Email sending failed: {0}")]
     Email(#[from] lettre::error::Error),
 
+    /// SMTP transport error
+    #[error("SMTP transport error: {0}")]
+    SmtpTransport(#[from] lettre::transport::smtp::Error),
+
+    /// SMTP transport build error
+    #[error("SMTP transport build error: {0}")]
+    SmtpTransportBuild(String),
+
     /// Email address parsing error
     #[error("Email address parsing failed: {0}")]
     EmailAddress(#[from] lettre::address::AddressError),

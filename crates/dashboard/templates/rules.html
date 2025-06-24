@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Solana Watchtower</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ title }}</h1>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/alerts">Alerts</a>
+                <a href="/metrics">Metrics</a>
+                <a href="/rules" class="active">Rules</a>
+                <a href="/settings">Settings</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="rules-container">
+                <div class="rules-header">
+                    <h2>Monitoring Rules</h2>
+                    <button class="btn btn-primary">Add Rule</button>
+                </div>
+
+                <div class="rules-list">
+                    {% if rules.is_empty() %}
+                        <div class="empty-state">
+                            <p>No rules configured yet.</p>
+                        </div>
+                    {% else %}
+                        <div class="rules-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Triggers</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rule in rules %}
+                                    <tr>
+                                        <td class="rule-name">{{ rule.name }}</td>
+                                        <td class="rule-description">{{ rule.description }}</td>
+                                        <td class="rule-status">
+                                            {% if rule.enabled %}
+                                                <span class="status enabled">Enabled</span>
+                                            {% else %}
+                                                <span class="status disabled">Disabled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="trigger-count">{{ rule.trigger_count }}</td>
+                                        <td class="rule-actions">
+                                            <button class="btn btn-sm btn-secondary">Edit</button>
+                                            {% if rule.enabled %}
+                                                <button class="btn btn-sm btn-warning">Disable</button>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-success">Enable</button>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-danger">Delete</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html> 

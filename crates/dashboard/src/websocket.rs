@@ -221,12 +221,12 @@ pub async fn alert_broadcast_task(
     alert_manager: Arc<AlertManager>,
     ws_connections: Arc<RwLock<HashMap<String, WebSocketConnection>>>,
 ) {
-    let mut alert_receiver = alert_manager.subscribe().await;
+    let mut alert_receiver = alert_manager.subscribe();
     
     while let Ok(alert) = alert_receiver.recv().await {
         let notification = AlertNotification {
             id: alert.id.clone(),
-            severity: format!("{:?}", alert.severity),
+            severity: alert.severity.as_str().to_string(),
             message: alert.message.clone(),
             program_id: alert.program_id.to_string(),
             timestamp: alert.timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string(),

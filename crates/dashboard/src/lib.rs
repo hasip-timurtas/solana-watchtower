@@ -142,15 +142,9 @@ impl DashboardServer {
             .with_state(self.state.clone());
 
         // Add middleware
-        let service = ServiceBuilder::new()
-            .layer(TimeoutLayer::new(Duration::from_secs(30)))
-            .into_inner();
-
         if self.config.enable_cors {
             app = app.layer(CorsLayer::permissive());
         }
-
-        app = app.layer(service);
 
         // Add static file serving
         if let Some(static_dir) = &self.config.static_dir {

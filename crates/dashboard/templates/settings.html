@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Solana Watchtower</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ title }}</h1>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/alerts">Alerts</a>
+                <a href="/metrics">Metrics</a>
+                <a href="/rules">Rules</a>
+                <a href="/settings" class="active">Settings</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="settings-container">
+                <h2>System Settings</h2>
+                
+                <div class="settings-section">
+                    <h3>Notification Channels</h3>
+                    <div class="notification-channels">
+                        {% if notification_channels.is_empty() %}
+                            <div class="empty-state">
+                                <p>No notification channels configured.</p>
+                            </div>
+                        {% else %}
+                            <div class="channels-list">
+                                {% for channel in notification_channels %}
+                                <div class="channel-item">
+                                    <div class="channel-info">
+                                        <h4>{{ channel.name }}</h4>
+                                        <span class="channel-status {{ channel.status }}">{{ channel.status }}</span>
+                                    </div>
+                                    <div class="channel-controls">
+                                        <label class="toggle">
+                                            <input type="checkbox" {% if channel.enabled %}checked{% endif %}>
+                                            <span class="slider"></span>
+                                        </label>
+                                        <button class="btn btn-sm btn-secondary">Configure</button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <button class="btn btn-primary">Add Channel</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Monitoring Settings</h3>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label for="max-events">Max Events per Minute</label>
+                            <input type="number" id="max-events" name="max-events" value="1000" min="1" max="10000">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="retention-days">Alert Retention (Days)</label>
+                            <input type="number" id="retention-days" name="retention-days" value="30" min="1" max="365">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="real-time-alerts" checked>
+                                Enable Real-time Alerts
+                            </label>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                            <button type="button" class="btn btn-secondary">Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="settings-section">
+                    <h3>System Information</h3>
+                    <div class="system-info">
+                        <div class="info-item">
+                            <span class="info-label">Version:</span>
+                            <span class="info-value">1.0.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Uptime:</span>
+                            <span class="info-value">2h 15m</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Memory Usage:</span>
+                            <span class="info-value">256 MB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html> 

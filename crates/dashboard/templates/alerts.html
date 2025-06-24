@@ -29,13 +29,13 @@
 
     <div class="alerts-list">
         {% for alert in alerts %}
-        <div class="alert-item severity-{{ alert.severity | lower }}" data-severity="{{ alert.severity }}" data-resolved="{{ alert.resolved }}">
+        <div class="alert-item severity-{{ alert.severity }}" data-severity="{{ alert.severity }}" data-resolved="{{ alert.resolved }}">
             <div class="alert-icon">
                 {% if alert.severity == "Critical" %}
                     <i class="fas fa-exclamation-triangle"></i>
-                {% elif alert.severity == "High" %}
+                {% else if alert.severity == "High" %}
                     <i class="fas fa-exclamation-circle"></i>
-                {% elif alert.severity == "Medium" %}
+                {% else if alert.severity == "Medium" %}
                     <i class="fas fa-info-circle"></i>
                 {% else %}
                     <i class="fas fa-check-circle"></i>
@@ -43,7 +43,7 @@
             </div>
             <div class="alert-content">
                 <div class="alert-header">
-                    <span class="alert-severity badge-{{ alert.severity | lower }}">{{ alert.severity }}</span>
+                    <span class="alert-severity badge-{{ alert.severity }}">{{ alert.severity }}</span>
                     <span class="alert-timestamp">{{ alert.timestamp }}</span>
                     {% if alert.resolved %}
                         <span class="alert-status resolved">Resolved</span>
@@ -60,7 +60,7 @@
                 <button class="btn btn-sm btn-secondary" onclick="viewAlert('{{ alert.id }}')">
                     <i class="fas fa-eye"></i> View
                 </button>
-                {% if not alert.resolved %}
+                {% if !alert.resolved %}
                 <button class="btn btn-sm btn-success" onclick="resolveAlert('{{ alert.id }}')">
                     <i class="fas fa-check"></i> Resolve
                 </button>

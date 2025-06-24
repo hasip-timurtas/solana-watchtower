@@ -74,7 +74,8 @@ impl EmailChannel {
         let creds = Credentials::new(config.username.clone(), config.password.clone());
         
         let transport = if config.use_tls {
-            AsyncSmtpTransport::<Tokio1Executor>::relay(&config.smtp_server)?
+            AsyncSmtpTransport::<Tokio1Executor>::relay(&config.smtp_server)
+                .map_err(|e| NotifierError::SmtpTransportBuild(e.to_string()))?
         } else {
             AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&config.smtp_server)
         }
@@ -130,7 +131,7 @@ impl NotificationChannel for EmailChannel {
                 }
                 Err(e) => {
                     error!("Failed to send email to {}: {}", to_address, e);
-                    return Err(NotifierError::Email(e));
+                    return Err(NotifierError::SmtpTransport(e));
                 }
             }
         }
@@ -182,7 +183,7 @@ impl NotificationChannel for EmailChannel {
                 .header(ContentType::TEXT_HTML)
                 .body(body.clone())?;
 
-            self.transport.send(email).await?;
+            self.transport.send(email).await.map_err(NotifierError::SmtpTransport)?;
         }
 
         info!("Batch email sent with {} alerts", alerts.len());
