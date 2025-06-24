@@ -1,142 +1,145 @@
-# 🛡️ Solana Smart Contract Security Toolkit (solsec)
+# 🛡️ Solana Watchtower
 
-[![Crates.io](https://img.shields.io/crates/v/solsec.svg)](https://crates.io/crates/solsec)
-[![Downloads](https://img.shields.io/crates/d/solsec.svg)](https://crates.io/crates/solsec)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/rust-2021-orange.svg)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
 
-A comprehensive security analysis tool for Solana smart contracts that helps developers identify vulnerabilities before deployment through static analysis and fuzz testing.
+An open-source, end-to-end monitoring and alert system for deployed Solana programs. Real-time WebSocket monitoring with custom risk rules, performance metrics, and multi-channel notifications.
 
 ## ✨ Features
 
-- **Static Analysis**: Detect common vulnerabilities in Anchor and native Rust programs
-- **Fuzz Testing**: Auto-generate fuzzing harnesses from IDL files
-- **Multiple Report Formats**: JSON, HTML, Markdown, and CSV outputs
-- **Plugin System**: Extensible architecture for custom security rules
-- **CI/CD Integration**: GitHub Actions support with automated security checks
-- **Professional Reports**: HTML reports with severity rankings and actionable recommendations
-- **Smart Error Handling**: Clear, colored error messages with proper path validation
-- **Comprehensive Examples**: 8 educational examples demonstrating vulnerabilities and secure patterns
+- **Real-time Monitoring**: WebSocket and Geyser plugin integration for live program event tracking
+- **Custom Rule Engine**: Built-in security rules with support for custom rule development
+- **Multi-channel Alerts**: Email (SMTP), Telegram, Slack, and Discord notifications
+- **Performance Metrics**: Prometheus integration with sliding window analytics
+- **Rate Limiting**: Intelligent rate limiting and alert batching to prevent spam
+- **Web Dashboard**: Real-time monitoring dashboard with alert management
+- **Modular Architecture**: Extensible crate-based design with clean APIs
+- **Production Ready**: Comprehensive error handling, logging, and configuration validation
 
 ## 🚀 Quick Start
 
 ### Installation
 
-#### From Crates.io (Recommended)
-```bash
-cargo install solsec
-```
-
 #### From Source
 ```bash
-git clone https://github.com/hasip-timurtas/solsec.git
-cd solsec
-cargo install --path .
+git clone https://github.com/hasip-timurtas/solana-watchtower.git
+cd solana-watchtower
+cargo build --release
+```
+
+#### Binary Installation
+```bash
+# The binary will be available at target/release/watchtower
+cp target/release/watchtower /usr/local/bin/
+```
+
+### Configuration
+
+Create a configuration file based on the example:
+
+```bash
+# Copy example configuration
+cp configs/watchtower.toml ./my-watchtower.toml
+
+# Edit configuration with your settings
+nano my-watchtower.toml
 ```
 
 ### Basic Usage
 
 ```bash
-# Scan the current project and generates both JSON and HTML
-solsec scan
+# Start monitoring with default configuration
+watchtower start
 
-# Scan a specific Solana program and set an output directory
-solsec scan ./my-solana-program --output ./results
+# Start with custom configuration
+watchtower start --config ./my-watchtower.toml
 
-# Generate only JSON
-solsec scan ./my-program --json-only --output results.json
+# Test notification channels
+watchtower test-notifications --config ./my-watchtower.toml
 
-# Generate only HTML
-solsec scan ./my-program --html-only --output results.html
+# Validate configuration
+watchtower validate-config --config ./my-watchtower.toml
 
-# Generate multiple formats at once
-solsec scan ./my-program --format json,html,markdown,csv
-
-# Don't open browser automatically
-solsec scan ./my-program --no-open
-
-# Run fuzz testing
-solsec fuzz ./my-solana-program --timeout 300
+# View help
+watchtower --help
 ```
 
 ## 📖 Commands
 
-### `solsec scan`
+### `watchtower start`
 
-Run static analysis on your Solana smart contracts. Generates both JSON and HTML by default. If no path is provided, it recursively scans the current directory for all `.rs` files, automatically ignoring `target/` and `.git/` folders.
-
-HTML reports automatically open in the default browser when running interactively, but remain closed in CI/automation environments.
+Start the monitoring system with real-time WebSocket connections to Solana.
 
 ```bash
-solsec scan [PATH] [OPTIONS]
+watchtower start [OPTIONS]
+
+OPTIONS:
+    -c, --config <FILE>          Configuration file path [default: ./watchtower.toml]
+    -v, --verbose                Enable verbose logging
+    -d, --daemon                 Run as background daemon
+        --dashboard-port <PORT>  Dashboard port [default: 8080]
+        --metrics-port <PORT>    Prometheus metrics port [default: 9090]
+
+EXAMPLES:
+    # Start with default configuration
+    watchtower start
+
+    # Start with custom config and verbose logging
+    watchtower start --config ./my-config.toml --verbose
+    
+    # Run as daemon with custom ports
+    watchtower start --daemon --dashboard-port 3000 --metrics-port 3001
+```
+
+### `watchtower test-notifications`
+
+Test all configured notification channels.
+
+```bash
+watchtower test-notifications [OPTIONS]
 
 OPTIONS:
     -c, --config <FILE>          Configuration file path
-    -o, --output <DIR>           Output directory [default: ./solsec-results]
-    -f, --format <FORMATS>       Output formats (comma-separated) [default: json,html] [possible values: json, html, markdown, csv]
-        --json-only              Only generate JSON
-        --html-only              Only generate HTML
-        --no-open                Don't automatically open HTML report in browser
-        --fail-on-critical       Exit with non-zero code on critical issues [default: true]
+    -t, --channel <CHANNEL>      Test specific channel (email, telegram, slack, discord)
 
 EXAMPLES:
-    # Scan the entire project (generates both JSON and HTML)
-    solsec scan
-
-    # Scan a specific directory with default formats
-    solsec scan ./programs/my-program
+    # Test all channels
+    watchtower test-notifications
     
-    # Generate only JSON for CI/CD integration
-    solsec scan ./programs --json-only --output results.json
-
-    # Generate only HTML for manual review
-    solsec scan ./programs --html-only --output results.html
-
-    # Generate HTML but don't open browser
-    solsec scan ./programs --html-only --no-open --output results.html
-
-    # Generate all available formats
-    solsec scan ./programs --format json,html,markdown,csv
-
-    # Scan with configuration file
-    solsec scan ./programs --config solsec.toml --output ./security-results
+    # Test only email
+    watchtower test-notifications --channel email
 ```
 
-### `solsec fuzz`
+### `watchtower validate-config`
 
-Run fuzz testing on smart contracts.
+Validate configuration file syntax and settings.
 
 ```bash
-solsec fuzz <PATH> [OPTIONS]
+watchtower validate-config [OPTIONS]
 
 OPTIONS:
-    -t, --timeout <SECONDS>      Timeout in seconds [default: 300]
-    -j, --jobs <NUMBER>          Number of parallel fuzzing jobs [default: 1]
-    -o, --output <DIR>           Output directory [default: ./fuzz-results]
+    -c, --config <FILE>          Configuration file path
 
 EXAMPLES:
-    solsec fuzz ./programs/my-program --timeout 600 --jobs 4
-    solsec fuzz ./programs --output ./custom-fuzz-results
+    watchtower validate-config --config ./watchtower.toml
 ```
 
+### `watchtower rules`
 
-
-### `solsec plugin`
-
-Manage security rule plugins.
+Manage monitoring rules.
 
 ```bash
-solsec plugin <ACTION> [PATH]
+watchtower rules <ACTION> [OPTIONS]
 
 ACTIONS:
-    list      List available plugins
-    load      Load a plugin
-    unload    Unload a plugin
+    list                List available rules
+    info <RULE_NAME>    Show rule information
+    test <RULE_NAME>    Test rule with sample data
 
 EXAMPLES:
-    solsec plugin list
-    solsec plugin load ./my-custom-rule.so
-    solsec plugin unload my-custom-rule
+    watchtower rules list
+    watchtower rules info liquidity_drop
+    watchtower rules test large_transaction
 ```
 
 ## 🔧 Configuration

@@ -1,0 +1,167 @@
+# Solana Watchtower Configuration Example
+# This file demonstrates how to configure the monitoring and alert system
+
+[network]
+# Solana RPC and WebSocket endpoints
+rpc_url = "https://api.mainnet-beta.solana.com"
+ws_url = "wss://api.mainnet-beta.solana.com"
+
+# Connection settings
+timeout_seconds = 30
+max_reconnect_attempts = 5
+reconnect_delay_seconds = 5
+
+# Programs to monitor
+[[programs]]
+id = "TokenkegQfeGuoRqH9L4g1hxgCaLJaFgqhk5eHwUfVR" # SPL Token Program
+name = "SPL Token"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo" # Solend Protocol
+name = "Solend"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP" # Orca DEX
+name = "Orca"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+# Subscription filters
+[filters]
+include_failed = false
+include_votes = false
+max_transactions_per_notification = 100
+commitment = "confirmed"
+
+# Built-in monitoring rules
+[rules.liquidity_drop]
+program = "9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP" # Orca
+threshold_pct = 10.0
+window_sec = 300
+min_liquidity = 1000000 # 1M tokens
+
+[rules.large_transaction]
+tvl_threshold_pct = 1.0
+amount_threshold = 500000 # 500K tokens
+
+[rules.oracle_deviation]
+max_deviation_pct = 5.0
+reference_oracle = "pyth_price_feed"
+
+[rules.high_failure_rate]
+max_failure_rate_pct = 25.0
+min_transaction_count = 10
+window_seconds = 300
+
+# Email notifications
+[alerts.email]
+smtp_server = "smtp.gmail.com"
+smtp_port = 587
+username = "your-email@gmail.com"
+password = "your-app-password"
+from_address = "watchtower@yourdomain.com"
+from_name = "Solana Watchtower"
+to_addresses = ["dev1@yourdomain.com", "dev2@yourdomain.com"]
+use_tls = true
+
+# Custom email templates (optional)
+subject_template = "[Watchtower] {{ severity_upper }} Alert: {{ rule_name }}"
+body_template = """
+<h2>🛡️ Solana Security Alert</h2>
+<p><strong>Rule:</strong> {{ rule_name }}</p>
+<p><strong>Program:</strong> {{ program_name }}</p>
+<p><strong>Message:</strong> {{ message }}</p>
+<p><strong>Confidence:</strong> {{ confidence }}%</p>
+<p><strong>Time:</strong> {{ timestamp_human }}</p>
+"""
+
+# Telegram notifications
+[alerts.telegram]
+bot_token = "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+chat_id = -1001234567890
+parse_mode = "Markdown"
+disable_web_page_preview = true
+disable_notification = false
+
+# Custom Telegram template (optional)
+message_template = """
+🚨 *{{ severity_upper }} Alert*
+
+*Rule:* `{{ rule_name }}`
+*Program:* {{ program_name }}
+*Message:* {{ message }}
+*Confidence:* {{ confidence }}%
+
+{% if suggested_actions -%}
+*Actions:*
+{% for action in suggested_actions -%}
+• {{ action }}
+{% endfor %}
+{%- endif %}
+"""
+
+# Slack notifications
+[alerts.slack]
+webhook_url = "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+channel = "#solana-alerts"
+username = "Solana Watchtower"
+icon = ":shield:"
+
+# Discord notifications
+[alerts.discord]
+webhook_url = "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
+username = "Solana Watchtower"
+avatar_url = "https://your-domain.com/watchtower-avatar.png"
+use_embeds = true
+
+# Rate limiting configuration
+[rate_limiting]
+enabled = true
+max_messages_per_minute = 10
+burst_size = 5
+
+# Global notification settings
+[global]
+min_severity = "medium"
+enable_batching = false
+batch_size = 5
+batch_timeout_seconds = 300
+
+# Notification filters
+[[global.filters]]
+name = "critical_only_for_telegram"
+severities = ["critical"]
+channels = ["telegram"]
+include = true
+
+[[global.filters]]
+name = "exclude_info_from_email"
+severities = ["info", "low"]
+channels = ["email"]
+include = false
+
+# Engine configuration
+[engine]
+max_history_events = 1000
+max_history_age_seconds = 3600
+max_concurrent_evaluations = 100
+rule_timeout_seconds = 30
+debug_logging = false
+
+# Metrics and monitoring
+[metrics]
+enabled = true
+prometheus_port = 9090
+dashboard_enabled = true
+dashboard_port = 8080
+
+# Optional: Custom rule plugins
+# [plugins]
+# custom_rule_path = "./plugins/custom_rules.so" 
