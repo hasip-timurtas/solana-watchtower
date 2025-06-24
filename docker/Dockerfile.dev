@@ -1,0 +1,77 @@
+# Development Dockerfile for Solana Watchtower
+# Optimized for development with hot reloading and debugging tools
+
+FROM rust:1.75-bullseye
+
+# Install system dependencies and development tools
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    libsqlite3-dev \
+    curl \
+    jq \
+    tree \
+    htop \
+    vim \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install useful Rust development tools
+RUN cargo install \
+    cargo-watch \
+    cargo-edit \
+    cargo-audit \
+    sqlx-cli \
+    --locked
+
+# Set working directory
+WORKDIR /app
+
+# Create app user (but use root for development convenience)
+RUN useradd -r -s /bin/bash -m watchtower || true
+
+# Install development dependencies
+RUN rustup component add rustfmt clippy
+
+# Set up development environment
+ENV RUST_LOG=debug
+ENV RUST_BACKTRACE=full
+ENV CARGO_TERM_COLOR=always
+
+# Create directories
+RUN mkdir -p /app/data /app/logs
+
+# Copy a minimal setup first (for dependency caching)
+COPY Cargo.toml Cargo.lock ./
+
+# Create src dirs for all crates to cache dependencies
+RUN mkdir -p crates/cli/src crates/dashboard/src crates/engine/src crates/notifier/src crates/subscriber/src
+COPY crates/cli/Cargo.toml ./crates/cli/
+COPY crates/dashboard/Cargo.toml ./crates/dashboard/
+COPY crates/engine/Cargo.toml ./crates/engine/
+COPY crates/notifier/Cargo.toml ./crates/notifier/
+COPY crates/subscriber/Cargo.toml ./crates/subscriber/
+
+# Create dummy files to build dependencies
+RUN echo "fn main() {}" > crates/cli/src/main.rs && \
+    echo "" > crates/dashboard/src/lib.rs && \
+    echo "" > crates/engine/src/lib.rs && \
+    echo "" > crates/notifier/src/lib.rs && \
+    echo "" > crates/subscriber/src/lib.rs
+
+# Build dependencies (will be cached unless Cargo.toml changes)
+RUN cargo build --release
+RUN cargo build  # Also build debug version
+
+# Clean up dummy files
+RUN rm -rf crates/*/src/main.rs crates/*/src/lib.rs
+
+# Expose ports
+EXPOSE 8080 9090 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Development entrypoint (overridden by docker-compose)
+CMD ["bash", "-c", "echo 'Development container ready. Use docker-compose to start services.' && tail -f /dev/null"] 

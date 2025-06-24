@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-chart-line"></i> System Metrics</h1>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="refreshMetrics()">
+            <i class="fas fa-sync"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<div class="metrics-container">
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <h3><i class="fas fa-tachometer-alt"></i> Performance</h3>
+            <canvas id="performanceChart"></canvas>
+        </div>
+        
+        <div class="metric-card">
+            <h3><i class="fas fa-memory"></i> Resource Usage</h3>
+            <canvas id="resourceChart"></canvas>
+        </div>
+        
+        <div class="metric-card full-width">
+            <h3><i class="fas fa-list"></i> All Metrics</h3>
+            <div class="metrics-table">
+                {% for metric in metrics %}
+                <div class="metric-row">
+                    <span class="metric-name">{{ metric.name }}</span>
+                    <span class="metric-value">{{ metric.value }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+});
+
+function initializeCharts() {
+    // Performance chart
+    const perfCtx = document.getElementById('performanceChart');
+    if (perfCtx) {
+        const performanceChart = new Chart(perfCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Events/sec',
+                    data: [],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+        
+        if (window.dashboard) {
+            window.dashboard.charts.performance = performanceChart;
+        }
+    }
+    
+    // Resource usage chart
+    const resourceCtx = document.getElementById('resourceChart');
+    if (resourceCtx) {
+        const resourceChart = new Chart(resourceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Memory', 'CPU', 'Disk'],
+                datasets: [{
+                    data: [30, 40, 20],
+                    backgroundColor: [
+                        'rgb(34, 197, 94)',
+                        'rgb(249, 115, 22)',
+                        'rgb(168, 85, 247)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        if (window.dashboard) {
+            window.dashboard.charts.resource = resourceChart;
+        }
+    }
+}
+
+function refreshMetrics() {
+    fetch('/api/metrics')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateMetricsDisplay(data.data);
+            }
+        })
+        .catch(error => console.error('Error refreshing metrics:', error));
+}
+
+function updateMetricsDisplay(metricsData) {
+    // Update metrics table
+    const container = document.querySelector('.metrics-table');
+    if (container && metricsData.parsed_metrics) {
+        container.innerHTML = '';
+        Object.entries(metricsData.parsed_metrics).forEach(([name, value]) => {
+            const row = document.createElement('div');
+            row.className = 'metric-row';
+            row.innerHTML = `
+                <span class="metric-name">${name}</span>
+                <span class="metric-value">${value}</span>
+            `;
+            container.appendChild(row);
+        });
+    }
+}
+</script>
+{% endblock %} 

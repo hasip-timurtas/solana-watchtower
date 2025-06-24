@@ -1,0 +1,158 @@
+# Basic Solana Watchtower Configuration for Mainnet
+# This example shows a simple setup for monitoring popular Solana programs
+
+[network]
+cluster = "mainnet-beta"
+rpc_url = "https://api.mainnet-beta.solana.com"
+ws_url = "wss://api.mainnet-beta.solana.com"
+
+[monitoring]
+# Buffer size for events (adjust based on expected load)
+event_buffer_size = 10000
+# How often to evaluate rules (in seconds)
+rule_evaluation_interval = 30
+# Enable detailed logging
+enable_debug_logs = false
+
+# Monitor popular SPL Token program
+[[programs]]
+name = "spl-token"
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+description = "SPL Token Program - Monitor token transfers and mints"
+
+# Monitor account changes (token accounts, mint accounts)
+monitor_accounts = true
+# Monitor all instructions to this program
+monitor_instructions = true
+# Monitor transaction logs
+monitor_logs = true
+
+# Filter for significant events only
+[programs.filters]
+# Only monitor transactions above 100 SOL equivalent
+min_transaction_value = 100000000000  # 100 SOL in lamports
+# Focus on specific instruction types
+instruction_types = ["Transfer", "MintTo", "Burn"]
+
+# Monitor Serum DEX (example of popular DEX)
+[[programs]]
+name = "serum-dex"
+address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+description = "Serum DEX Program - Monitor trading activity"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false  # Can be noisy for DEX
+
+[programs.filters]
+# Monitor significant trades only
+min_transaction_value = 10000000000  # 10 SOL minimum
+
+# Basic monitoring rules
+[[rules]]
+name = "large-token-transfer"
+type = "transaction_size"
+description = "Alert on large token transfers"
+# Trigger on transactions > 1000 SOL equivalent
+threshold = 1000000000000  # 1000 SOL in lamports
+# Evaluate over 5-minute windows
+window = "5m"
+severity = "medium"
+enabled = true
+
+[[rules]]
+name = "high-frequency-trading"
+type = "transaction_frequency"
+description = "Detect unusual trading frequency"
+# More than 100 transactions in 1 minute
+threshold = 100
+window = "1m"
+severity = "high"
+enabled = true
+
+[[rules]]
+name = "program-failure-rate"
+type = "failure_rate"
+description = "Monitor program instruction failure rate"
+# Alert if > 10% of instructions fail
+threshold = 0.1
+window = "10m"
+severity = "high"
+enabled = true
+
+# Simple notification setup
+[notifications]
+# Batch similar alerts to reduce noise
+batch_size = 10
+batch_timeout = 300  # 5 minutes
+# Limit notifications to prevent spam
+rate_limit_per_hour = 100
+
+# Email notifications (configure SMTP settings)
+[[notifications.channels]]
+name = "email-alerts"
+type = "email"
+enabled = false  # Enable after configuring SMTP
+recipients = ["admin@example.com"]
+
+# Filter to only critical and high severity
+[notifications.channels.filter]
+severity = ["critical", "high"]
+
+# Telegram notifications (configure bot token)
+[[notifications.channels]]
+name = "telegram-alerts"
+type = "telegram"
+enabled = false  # Enable after configuring bot
+chat_id = "your-chat-id"
+
+[notifications.channels.filter]
+severity = ["critical", "high", "medium"]
+
+# Console logging (always enabled for development)
+[[notifications.channels]]
+name = "console"
+type = "console"
+enabled = true
+
+[notifications.channels.filter]
+severity = ["critical", "high", "medium", "low"]
+
+# Metrics and dashboard configuration
+[metrics]
+enabled = true
+# Expose metrics on port 9090
+port = 9090
+# Keep metrics for 7 days
+retention_days = 7
+
+# Store metrics in Prometheus format
+[metrics.prometheus]
+enabled = true
+# Histogram buckets for latency metrics
+latency_buckets = [0.001, 0.01, 0.1, 1.0, 10.0]
+
+# Web dashboard configuration
+[dashboard]
+enabled = true
+host = "0.0.0.0"
+port = 8080
+# Enable real-time WebSocket updates
+enable_websocket = true
+
+# Security configuration
+[security]
+# API key for webhook endpoints (generate a secure random string)
+api_key = "your-secure-api-key-here"
+# CORS origins for dashboard
+cors_origins = ["http://localhost:3000", "https://your-domain.com"]
+
+# Logging configuration
+[logging]
+level = "info"  # debug, info, warn, error
+# Log to both console and file
+targets = ["console", "file"]
+# Rotate log files daily
+rotation = "daily"
+# Keep 30 days of logs
+retention_days = 30 

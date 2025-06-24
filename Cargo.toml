@@ -4,7 +4,8 @@ members = [
     "crates/subscriber",
     "crates/engine", 
     "crates/notifier",
-    "crates/cli"
+    "crates/cli",
+    "crates/dashboard"
 ]
 
 [workspace.package]

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1><i class="fas fa-shield-alt"></i> Solana Watchtower Dashboard</h1>
+    <p class="subtitle">Real-time monitoring and alerting for Solana programs</p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-heartbeat"></i> System Status</h3>
+        </div>
+        <div class="card-content">
+            <div class="status-item">
+                <span class="label">Engine Status:</span>
+                <span class="value status-{{ engine_status | lower }}">{{ engine_status }}</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Uptime:</span>
+                <span class="value">{{ uptime }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Alerts Overview</h3>
+        </div>
+        <div class="card-content">
+            <div class="metric">
+                <div class="metric-value">{{ alert_count }}</div>
+                <div class="metric-label">Total Alerts</div>
+            </div>
+            <a href="/alerts" class="card-link">View All Alerts →</a>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-cogs"></i> Monitoring Rules</h3>
+        </div>
+        <div class="card-content">
+            <div class="metric">
+                <div class="metric-value">{{ active_rules }}</div>
+                <div class="metric-label">Active Rules</div>
+            </div>
+            <a href="/rules" class="card-link">Manage Rules →</a>
+        </div>
+    </div>
+
+    <div class="dashboard-card full-width">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-line"></i> Real-time Metrics</h3>
+        </div>
+        <div class="card-content">
+            <canvas id="metricsChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize real-time metrics chart
+    const ctx = document.getElementById('metricsChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Events per Second',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Connect to WebSocket for real-time updates
+    const ws = new WebSocket(`ws://${window.location.host}/ws`);
+    
+    ws.onmessage = function(event) {
+        const message = JSON.parse(event.data);
+        if (message.type === 'Metrics') {
+            updateChart(chart, message.data);
+        }
+    };
+
+    function updateChart(chart, data) {
+        const now = new Date().toLocaleTimeString();
+        chart.data.labels.push(now);
+        chart.data.datasets[0].data.push(data.metrics.events_per_second || 0);
+        
+        // Keep only last 20 data points
+        if (chart.data.labels.length > 20) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+        }
+        
+        chart.update();
+    }
+});
+</script>
+{% endblock %} 

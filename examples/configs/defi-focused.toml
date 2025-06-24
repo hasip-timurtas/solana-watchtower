@@ -1,0 +1,398 @@
+# DeFi-Focused Solana Watchtower Configuration
+# Specialized monitoring for DeFi protocols: lending, borrowing, liquidity, and yield farming
+
+[network]
+cluster = "mainnet-beta"
+rpc_url = "https://api.mainnet-beta.solana.com"
+ws_url = "wss://api.mainnet-beta.solana.com"
+
+[monitoring]
+event_buffer_size = 25000
+rule_evaluation_interval = 15  # Faster evaluation for DeFi events
+enable_debug_logs = false
+
+# Solend - Major lending protocol
+[[programs]]
+name = "solend-main"
+address = "So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo"
+description = "Solend Main Pool - Monitor lending and liquidations"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true  # Critical for liquidation events
+
+[programs.filters]
+min_transaction_value = 1000000000  # 1 SOL
+instruction_types = [
+    "DepositReserveLiquidity",
+    "RedeemReserveCollateral", 
+    "BorrowObligationLiquidity",
+    "RepayObligationLiquidity",
+    "LiquidateObligation",
+    "RefreshReserve",
+    "RefreshObligation"
+]
+
+# Mango Markets - Margin trading and lending
+[[programs]]
+name = "mango-v3"
+address = "mv3ekLzLbnVPNxjSKvqBpU3ZeZXPQdEC3bp5MDEBG68"
+description = "Mango Markets v3 - Margin trading and lending"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true
+
+[programs.filters]
+min_transaction_value = 5000000000  # 5 SOL
+instruction_types = [
+    "Deposit",
+    "Withdraw", 
+    "PlaceOrder",
+    "CancelOrder",
+    "LiquidateTokenAndToken",
+    "LiquidateTokenAndPerp",
+    "UpdateFunding"
+]
+
+# Raydium - AMM and liquidity farming
+[[programs]]
+name = "raydium-amm"
+address = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+description = "Raydium AMM - Liquidity and farming"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 2000000000  # 2 SOL
+instruction_types = [
+    "Swap",
+    "AddLiquidity",
+    "RemoveLiquidity",
+    "Deposit",
+    "Withdraw"
+]
+
+# Orca - Concentrated liquidity AMM
+[[programs]]
+name = "orca-whirlpools"
+address = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+description = "Orca Whirlpools - Concentrated liquidity"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 1000000000  # 1 SOL
+
+# Jupiter - Aggregator (important for DeFi flows)
+[[programs]]
+name = "jupiter-v4"
+address = "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB"
+description = "Jupiter v4 Aggregator - DeFi routing"
+
+monitor_accounts = false  # Too noisy
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 5000000000  # 5 SOL for significant swaps
+
+# Drift Protocol - Perpetuals and spot trading
+[[programs]]
+name = "drift-protocol"
+address = "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
+description = "Drift Protocol - Perpetuals trading"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true
+
+[programs.filters]
+min_transaction_value = 1000000000  # 1 SOL
+
+# Port Finance - Another lending protocol
+[[programs]]
+name = "port-finance"
+address = "Port7uDYB3wk6GJAw4KT1WpTeMtSu9bTcChBHkX2LfR"
+description = "Port Finance - Lending protocol"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true
+
+[programs.filters]
+min_transaction_value = 1000000000  # 1 SOL
+
+# DeFi-specific monitoring rules
+
+# Critical: Large liquidation events
+[[rules]]
+name = "massive-liquidation"
+type = "liquidation_volume"
+description = "Detect large liquidation events that could indicate market stress"
+threshold = 10000000000000  # 10,000 SOL worth
+window = "5m"
+severity = "critical"
+enabled = true
+
+# Critical: Protocol failure rates
+[[rules]]
+name = "defi-protocol-failures"
+type = "failure_rate"
+description = "High failure rates in DeFi protocols"
+threshold = 0.2  # 20% failure rate
+window = "5m"
+severity = "critical"
+enabled = true
+
+# High: Significant liquidity removals
+[[rules]]
+name = "major-liquidity-withdrawal"
+type = "liquidity_drop"
+description = "Large liquidity withdrawals from pools"
+threshold = 0.25  # 25% liquidity drop
+window = "10m"
+severity = "high"
+enabled = true
+
+# High: Oracle price manipulation attempts
+[[rules]]
+name = "oracle-manipulation-attempt"
+type = "oracle_price_deviation"
+description = "Potential oracle manipulation or extreme volatility"
+threshold = 0.1  # 10% price deviation
+window = "2m"
+severity = "high"
+enabled = true
+
+# High: Flash loan attacks or large borrows
+[[rules]]
+name = "flash-loan-activity"
+type = "flash_loan_detection"
+description = "Detect potential flash loan attacks"
+threshold = 50000000000000  # 50,000 SOL equivalent
+window = "1m"
+severity = "high"
+enabled = true
+
+# Medium: Unusual borrowing patterns
+[[rules]]
+name = "unusual-borrowing-spike"
+type = "borrowing_volume"
+description = "Spike in borrowing activity"
+threshold = 5000000000000  # 5,000 SOL worth
+window = "15m"
+severity = "medium"
+enabled = true
+
+# Medium: Large yield farming movements
+[[rules]]
+name = "yield-farming-migration"
+type = "farming_activity"
+description = "Large movements in yield farming positions"
+threshold = 10000000000000  # 10,000 SOL worth
+window = "30m"
+severity = "medium"
+enabled = true
+
+# Medium: Interest rate changes
+[[rules]]
+name = "interest-rate-spike"
+type = "interest_rate_change"
+description = "Significant changes in lending rates"
+threshold = 0.05  # 5% rate change
+window = "15m"
+severity = "medium"
+enabled = true
+
+# Low: General DeFi activity monitoring
+[[rules]]
+name = "defi-activity-increase"
+type = "transaction_frequency"
+description = "General increase in DeFi activity"
+threshold = 200  # 200 transactions per window
+window = "10m"
+severity = "low"
+enabled = true
+
+# Low: TVL monitoring
+[[rules]]
+name = "tvl-significant-change"
+type = "tvl_change"
+description = "Significant changes in Total Value Locked"
+threshold = 0.1  # 10% TVL change
+window = "1h"
+severity = "low"
+enabled = true
+
+# DeFi-focused notifications
+[notifications]
+batch_size = 15
+batch_timeout = 300  # 5 minutes
+rate_limit_per_hour = 100
+
+# Critical DeFi alerts - immediate notification
+[[notifications.channels]]
+name = "defi-critical-telegram"
+type = "telegram"
+enabled = true
+chat_id = "your-defi-alerts-chat"
+template = "defi_critical"
+[notifications.channels.filter]
+severity = ["critical"]
+
+# High priority DeFi alerts
+[[notifications.channels]]
+name = "defi-alerts-slack"
+type = "slack"
+enabled = true
+webhook_url = "https://hooks.slack.com/services/YOUR/DEFI/WEBHOOK"
+channel = "#defi-alerts"
+template = "defi_detailed"
+[notifications.channels.filter]
+severity = ["critical", "high"]
+
+# DeFi team email notifications
+[[notifications.channels]]
+name = "defi-team-email"
+type = "email"
+enabled = true
+recipients = ["defi-team@company.com", "risk@company.com"]
+template = "defi_summary"
+[notifications.channels.filter]
+severity = ["critical", "high", "medium"]
+
+# Discord for DeFi community alerts
+[[notifications.channels]]
+name = "defi-community-discord"
+type = "discord"
+enabled = true
+webhook_url = "https://discord.com/api/webhooks/YOUR/DEFI/WEBHOOK"
+template = "defi_community"
+[notifications.channels.filter]
+severity = ["critical", "high"]
+
+# Comprehensive DeFi logging
+[[notifications.channels]]
+name = "defi-audit-log"
+type = "file"
+enabled = true
+file_path = "/app/logs/defi-events.log"
+[notifications.channels.filter]
+severity = ["critical", "high", "medium", "low"]
+
+# DeFi-specific metrics
+[metrics]
+enabled = true
+port = 9090
+retention_days = 14
+
+[metrics.prometheus]
+enabled = true
+latency_buckets = [0.001, 0.01, 0.1, 1.0, 5.0, 15.0]
+
+# DeFi protocol metrics
+[metrics.defi]
+# Track lending metrics
+lending_volume = true
+borrowing_volume = true
+liquidation_volume = true
+interest_rates = true
+
+# Track AMM metrics
+liquidity_changes = true
+swap_volumes = true
+impermanent_loss = true
+
+# Track yield farming metrics
+farming_deposits = true
+farming_withdrawals = true
+rewards_distributed = true
+
+# Dashboard for DeFi monitoring
+[dashboard]
+enabled = true
+host = "0.0.0.0"
+port = 8080
+enable_websocket = true
+
+# DeFi dashboard customization
+[dashboard.defi]
+show_protocol_tvl = true
+show_interest_rates = true
+show_liquidation_health = true
+show_yield_opportunities = true
+
+# Security focused on DeFi risks
+[security]
+api_key = "defi-monitoring-secure-key"
+cors_origins = ["https://defi-dashboard.company.com"]
+require_https = true
+
+# DeFi risk management
+[security.defi_risks]
+monitor_flash_loans = true
+monitor_governance_attacks = true
+monitor_oracle_manipulation = true
+track_large_positions = true
+
+# Enhanced logging for DeFi events
+[logging]
+level = "info"
+targets = ["console", "file"]
+file_path = "/app/logs/defi-watchtower.log"
+rotation = "daily"
+retention_days = 60
+
+# DeFi-specific log categories
+[logging.defi]
+liquidation_events = "info"
+oracle_updates = "debug"
+interest_rate_changes = "info"
+large_transactions = "warn"
+
+# Connection optimized for DeFi monitoring
+[connection]
+connection_timeout = 20
+request_timeout = 45
+max_retries = 8
+retry_delay = 2
+
+# WebSocket tuned for DeFi events
+[websocket]
+reconnect_interval = 15
+max_reconnect_attempts = 30
+ping_interval = 45
+
+# DeFi-specific configuration
+[defi]
+# Enable DeFi-specific features
+enable_liquidation_monitoring = true
+enable_yield_tracking = true
+enable_tvl_monitoring = true
+
+# Oracle configuration
+[defi.oracles]
+# Pyth oracles for price feeds
+pyth_program = "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
+# Switchboard oracles
+switchboard_program = "SW1TCH7qEPTdLsDHRgPuMQjbQxKdH2aBStViMFnt64f"
+
+# Lending protocol settings
+[defi.lending]
+# Monitor health ratios below this threshold
+critical_health_ratio = 1.1
+warning_health_ratio = 1.25
+# Large position threshold
+large_position_threshold = 1000000000000  # 1000 SOL
+
+# AMM settings
+[defi.amm]
+# Monitor pools with TVL above this threshold
+min_pool_tvl = 1000000000000  # 1000 SOL
+# Slippage monitoring
+max_acceptable_slippage = 0.05  # 5% 

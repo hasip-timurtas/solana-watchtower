@@ -1,0 +1,359 @@
+# Production Solana Watchtower Configuration
+# Multi-program monitoring setup for production environments
+# Monitors major DeFi protocols, DEXs, and token programs
+
+[network]
+cluster = "mainnet-beta"
+# Use high-performance RPC endpoints for production
+rpc_url = "https://api.mainnet-beta.solana.com"
+ws_url = "wss://api.mainnet-beta.solana.com"
+
+# Backup RPC endpoints for failover
+backup_rpc_urls = [
+    "https://solana-api.projectserum.com",
+    "https://rpc.ankr.com/solana",
+    "https://api.rpcpool.com"
+]
+
+[monitoring]
+# Large buffer for high-throughput production
+event_buffer_size = 50000
+# Balanced evaluation interval
+rule_evaluation_interval = 30
+# Disable debug logs in production
+enable_debug_logs = false
+# Enable performance monitoring
+enable_performance_metrics = true
+
+# SPL Token Program - Core token operations
+[[programs]]
+name = "spl-token"
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+description = "SPL Token Program - Monitor large token movements"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false  # Reduce noise in production
+
+[programs.filters]
+# Focus on significant transactions only
+min_transaction_value = 1000000000000  # 1000 SOL
+instruction_types = ["Transfer", "MintTo", "Burn", "CloseAccount"]
+
+# Serum DEX v3 - Major decentralized exchange
+[[programs]]
+name = "serum-dex-v3"
+address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+description = "Serum DEX v3 - Monitor trading activity and liquidity"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 50000000000  # 50 SOL minimum
+instruction_types = ["NewOrder", "CancelOrder", "SettleFunds"]
+
+# Raydium AMM - Popular automated market maker
+[[programs]]
+name = "raydium-amm"
+address = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+description = "Raydium AMM - Monitor liquidity and swaps"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 10000000000  # 10 SOL
+
+# Orca - Another major AMM
+[[programs]]
+name = "orca-whirlpools"
+address = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+description = "Orca Whirlpools - Concentrated liquidity monitoring"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 25000000000  # 25 SOL
+
+# Solend - Major lending protocol
+[[programs]]
+name = "solend"
+address = "So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo"
+description = "Solend Protocol - Monitor lending/borrowing activities"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true  # Important for liquidation events
+
+[programs.filters]
+min_transaction_value = 5000000000  # 5 SOL
+instruction_types = ["DepositReserveLiquidity", "RedeemReserveCollateral", "BorrowObligationLiquidity", "RepayObligationLiquidity", "LiquidateObligation"]
+
+# Mango Markets - Derivatives trading
+[[programs]]
+name = "mango-v3"
+address = "mv3ekLzLbnVPNxjSKvqBpU3ZeZXPQdEC3bp5MDEBG68"
+description = "Mango Markets v3 - Monitor margin trading and liquidations"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true
+
+[programs.filters]
+min_transaction_value = 10000000000  # 10 SOL
+
+# Metaplex - NFT standard
+[[programs]]
+name = "metaplex-token-metadata"
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+description = "Metaplex Token Metadata - Monitor NFT activities"
+
+monitor_accounts = true
+monitor_instructions = false  # Can be very noisy
+monitor_logs = false
+
+[programs.filters]
+min_transaction_value = 1000000000  # 1 SOL for NFTs
+
+# Production monitoring rules
+
+# Critical: Large token transfers that could indicate exploits
+[[rules]]
+name = "massive-token-transfer"
+type = "transaction_size"
+description = "Alert on extremely large token transfers"
+threshold = 10000000000000  # 10,000 SOL
+window = "1m"
+severity = "critical"
+enabled = true
+
+# Critical: High failure rates indicating potential issues
+[[rules]]
+name = "critical-failure-rate"
+type = "failure_rate"
+description = "Critical failure rate indicating system issues"
+threshold = 0.3  # 30% failure rate
+window = "5m"
+severity = "critical"
+enabled = true
+
+# High: Unusual trading volumes
+[[rules]]
+name = "anomalous-trading-volume"
+type = "transaction_frequency"
+description = "Detect unusual spikes in trading activity"
+threshold = 1000  # 1000 transactions in window
+window = "5m"
+severity = "high"
+enabled = true
+
+# High: Liquidity drops in major pools
+[[rules]]
+name = "major-liquidity-drop"
+type = "liquidity_drop"
+description = "Significant liquidity reduction in major pools"
+threshold = 0.2  # 20% drop
+window = "10m"
+severity = "high"
+enabled = true
+
+# High: Oracle price deviations
+[[rules]]
+name = "oracle-price-anomaly"
+type = "oracle_price_deviation"
+description = "Unusual price movements that could indicate manipulation"
+threshold = 0.15  # 15% deviation
+window = "5m"
+severity = "high"
+enabled = true
+
+# Medium: Large liquidations
+[[rules]]
+name = "large-liquidation-event"
+type = "liquidation_volume"
+description = "Monitor for large liquidation events"
+threshold = 1000000000000  # 1000 SOL worth
+window = "15m"
+severity = "medium"
+enabled = true
+
+# Medium: Whale activity monitoring
+[[rules]]
+name = "whale-activity"
+type = "whale_transaction"
+description = "Track large holder movements"
+threshold = 5000000000000  # 5000 SOL
+window = "30m"
+severity = "medium"
+enabled = true
+
+# Low: General activity monitoring
+[[rules]]
+name = "general-activity-spike"
+type = "transaction_frequency"
+description = "General increase in protocol activity"
+threshold = 500
+window = "10m"
+severity = "low"
+enabled = true
+
+# Production notification configuration
+[notifications]
+# Batch alerts to prevent spam
+batch_size = 20
+batch_timeout = 600  # 10 minutes
+# Conservative rate limiting for production
+rate_limit_per_hour = 50
+
+# Critical alerts via multiple channels
+[[notifications.channels]]
+name = "critical-pagerduty"
+type = "webhook"
+enabled = true
+url = "https://events.pagerduty.com/integration/your-integration-key/enqueue"
+[notifications.channels.filter]
+severity = ["critical"]
+
+# High priority alerts to operations team
+[[notifications.channels]]
+name = "ops-team-slack"
+type = "slack"
+enabled = true
+webhook_url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+channel = "#solana-alerts"
+[notifications.channels.filter]
+severity = ["critical", "high"]
+
+# Email notifications for management
+[[notifications.channels]]
+name = "management-email"
+type = "email"
+enabled = true
+recipients = ["cto@company.com", "devops@company.com"]
+[notifications.channels.filter]
+severity = ["critical", "high"]
+
+# Telegram for immediate notifications
+[[notifications.channels]]
+name = "immediate-telegram"
+type = "telegram"
+enabled = true
+chat_id = "your-production-chat-id"
+[notifications.channels.filter]
+severity = ["critical", "high"]
+
+# Discord for development team
+[[notifications.channels]]
+name = "dev-team-discord"
+type = "discord"
+enabled = true
+webhook_url = "https://discord.com/api/webhooks/YOUR/WEBHOOK"
+[notifications.channels.filter]
+severity = ["critical", "high", "medium"]
+
+# Comprehensive logging for audit trail
+[[notifications.channels]]
+name = "audit-log"
+type = "file"
+enabled = true
+file_path = "/app/logs/production-alerts.log"
+[notifications.channels.filter]
+severity = ["critical", "high", "medium", "low"]
+
+# Metrics configuration for production monitoring
+[metrics]
+enabled = true
+port = 9090
+retention_days = 30  # Keep metrics for 30 days
+
+[metrics.prometheus]
+enabled = true
+latency_buckets = [0.001, 0.01, 0.1, 1.0, 10.0, 30.0]
+
+# Detailed production metrics
+[metrics.custom]
+# Track protocol-specific metrics
+protocol_transaction_counts = true
+protocol_volume_metrics = true
+rule_performance_metrics = true
+notification_delivery_stats = true
+
+# Production dashboard configuration
+[dashboard]
+enabled = true
+host = "0.0.0.0"
+port = 8080
+enable_websocket = true
+# Disable debug endpoints in production
+enable_debug_endpoints = false
+
+# Production security configuration
+[security]
+# Use strong API key for production
+api_key = "prod-secure-api-key-64-chars-minimum-entropy"
+# Restrict CORS to known domains
+cors_origins = [
+    "https://dashboard.yourcompany.com",
+    "https://monitoring.yourcompany.com"
+]
+# Require HTTPS in production
+require_https = true
+# Enable rate limiting
+enable_rate_limiting = true
+
+# Production logging configuration
+[logging]
+level = "info"  # Balanced logging for production
+targets = ["console", "file"]
+file_path = "/app/logs/watchtower-production.log"
+rotation = "daily"
+retention_days = 90  # Keep logs for 90 days
+
+# Production connection settings
+[connection]
+# Production-optimized timeouts
+connection_timeout = 30
+request_timeout = 60
+max_retries = 5
+retry_delay = 2
+keepalive_timeout = 300
+
+# WebSocket configuration for production
+[websocket]
+reconnect_interval = 30
+max_reconnect_attempts = 20
+ping_interval = 60
+# Disable message logging in production
+log_raw_messages = false
+
+# High availability configuration
+[high_availability]
+# Enable automatic failover
+enable_failover = true
+# Health check interval
+health_check_interval = 30
+# Failover threshold
+max_consecutive_failures = 3
+
+# Performance optimization for production
+[performance]
+# Enable connection pooling
+enable_connection_pooling = true
+max_connections = 100
+# Enable request batching
+enable_request_batching = true
+batch_size = 50
+batch_timeout = 1000  # 1 second
+
+# Backup and recovery
+[backup]
+# Enable configuration backup
+enable_config_backup = true
+backup_interval = "daily"
+backup_retention_days = 30
+backup_location = "/app/backups/" 

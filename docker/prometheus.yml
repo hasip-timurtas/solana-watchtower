@@ -1,0 +1,43 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+scrape_configs:
+  # Solana Watchtower metrics
+  - job_name: 'watchtower'
+    static_configs:
+      - targets: ['watchtower:9090']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 10s
+    honor_labels: true
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Redis metrics (if redis_exporter is added)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+# Alert manager configuration (if needed)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Remote write configuration (optional, for external storage)
+# remote_write:
+#   - url: "https://your-remote-storage/api/v1/write"
+#     headers:
+#       Authorization: "Bearer your-token"
+
+# Storage configuration handled via command line arguments in docker-compose.yml 

@@ -1,0 +1,97 @@
+version: '3.8'
+
+# Development Docker Compose configuration
+# Use: docker-compose -f docker/docker-compose.dev.yml up
+
+services:
+  # Development version with source mounting and hot reload
+  watchtower-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: solana-watchtower-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Dashboard
+      - "9090:9090"  # Metrics
+      - "5000:5000"  # Debug port
+    environment:
+      - RUST_LOG=debug
+      - RUST_BACKTRACE=full
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      - SOLANA_WS_URL=${SOLANA_WS_URL:-wss://api.devnet.solana.com}
+      - DATABASE_URL=sqlite:///app/data/watchtower.db
+      - CONFIG_PATH=/app/configs/watchtower.toml
+      - ENABLE_DEBUG_LOGS=true
+    volumes:
+      - ../:/app:delegated  # Mount source for development
+      - watchtower_dev_data:/app/data
+      - watchtower_dev_logs:/app/logs
+      - cargo_cache:/usr/local/cargo/registry  # Cache Cargo dependencies
+      - target_cache:/app/target  # Cache build artifacts
+    networks:
+      - watchtower-dev
+    depends_on:
+      - redis-dev
+    working_dir: /app
+    command: >
+      sh -c "
+        echo 'Installing cargo-watch...' &&
+        cargo install cargo-watch &&
+        echo 'Starting development server with hot reload...' &&
+        cargo watch -x 'run --bin watchtower-dashboard -- --config configs/watchtower.toml --host 0.0.0.0 --port 8080'
+      "
+
+  # Lightweight Redis for development
+  redis-dev:
+    image: redis:7-alpine
+    container_name: watchtower-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - watchtower-dev
+    command: redis-server --save 60 1000 --loglevel warning
+
+  # Development database viewer
+  adminer:
+    image: adminer
+    container_name: watchtower-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks:
+      - watchtower-dev
+    profiles:
+      - tools
+
+  # Log aggregation for development
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: watchtower-portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - watchtower-dev
+    profiles:
+      - tools
+
+volumes:
+  watchtower_dev_data:
+    driver: local
+  watchtower_dev_logs:
+    driver: local
+  cargo_cache:
+    driver: local
+  target_cache:
+    driver: local
+  portainer_data:
+    driver: local
+
+networks:
+  watchtower-dev:
+    driver: bridge 

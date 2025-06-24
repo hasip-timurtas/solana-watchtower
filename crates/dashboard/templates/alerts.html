@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-exclamation-triangle"></i> Alert Management</h1>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="refreshAlerts()">
+            <i class="fas fa-sync"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<div class="alerts-container">
+    <div class="alerts-filters">
+        <select id="severityFilter" onchange="filterAlerts()">
+            <option value="">All Severities</option>
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+        
+        <select id="statusFilter" onchange="filterAlerts()">
+            <option value="">All Statuses</option>
+            <option value="false">Active</option>
+            <option value="true">Resolved</option>
+        </select>
+    </div>
+
+    <div class="alerts-list">
+        {% for alert in alerts %}
+        <div class="alert-item severity-{{ alert.severity | lower }}" data-severity="{{ alert.severity }}" data-resolved="{{ alert.resolved }}">
+            <div class="alert-icon">
+                {% if alert.severity == "Critical" %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                {% elif alert.severity == "High" %}
+                    <i class="fas fa-exclamation-circle"></i>
+                {% elif alert.severity == "Medium" %}
+                    <i class="fas fa-info-circle"></i>
+                {% else %}
+                    <i class="fas fa-check-circle"></i>
+                {% endif %}
+            </div>
+            <div class="alert-content">
+                <div class="alert-header">
+                    <span class="alert-severity badge-{{ alert.severity | lower }}">{{ alert.severity }}</span>
+                    <span class="alert-timestamp">{{ alert.timestamp }}</span>
+                    {% if alert.resolved %}
+                        <span class="alert-status resolved">Resolved</span>
+                    {% else %}
+                        <span class="alert-status active">Active</span>
+                    {% endif %}
+                </div>
+                <div class="alert-message">{{ alert.message }}</div>
+                <div class="alert-details">
+                    <span class="alert-program">Program: {{ alert.program_id }}</span>
+                </div>
+            </div>
+            <div class="alert-actions">
+                <button class="btn btn-sm btn-secondary" onclick="viewAlert('{{ alert.id }}')">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                {% if not alert.resolved %}
+                <button class="btn btn-sm btn-success" onclick="resolveAlert('{{ alert.id }}')">
+                    <i class="fas fa-check"></i> Resolve
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="pagination">
+        {% if pagination.page > 1 %}
+            <a href="?page={{ pagination.page - 1 }}&limit={{ pagination.limit }}" class="btn btn-secondary">
+                <i class="fas fa-chevron-left"></i> Previous
+            </a>
+        {% endif %}
+        
+        <span class="pagination-info">
+            Page {{ pagination.page }} of {{ pagination.pages }} 
+            ({{ pagination.total }} total alerts)
+        </span>
+        
+        {% if pagination.page < pagination.pages %}
+            <a href="?page={{ pagination.page + 1 }}&limit={{ pagination.limit }}" class="btn btn-secondary">
+                Next <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterAlerts() {
+    const severityFilter = document.getElementById('severityFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const alertItems = document.querySelectorAll('.alert-item');
+    
+    alertItems.forEach(item => {
+        const severity = item.dataset.severity;
+        const resolved = item.dataset.resolved;
+        
+        let showItem = true;
+        
+        if (severityFilter && severity !== severityFilter) {
+            showItem = false;
+        }
+        
+        if (statusFilter && resolved !== statusFilter) {
+            showItem = false;
+        }
+        
+        item.style.display = showItem ? 'flex' : 'none';
+    });
+}
+
+function refreshAlerts() {
+    window.location.reload();
+}
+
+function viewAlert(alertId) {
+    // TODO: Open alert detail modal or navigate to detail page
+    alert('View alert: ' + alertId);
+}
+
+function resolveAlert(alertId) {
+    if (confirm('Are you sure you want to resolve this alert?')) {
+        fetch(`/api/alerts/${alertId}/resolve`, {
+            method: 'POST'
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to resolve alert');
+            }
+        });
+    }
+}
+
+// Connect to WebSocket for real-time alert updates
+const ws = new WebSocket(`ws://${window.location.host}/ws`);
+
+ws.onmessage = function(event) {
+    const message = JSON.parse(event.data);
+    if (message.type === 'Alert') {
+        // Add new alert to the top of the list
+        addNewAlert(message.data);
+    }
+};
+
+function addNewAlert(alertData) {
+    const alertsList = document.querySelector('.alerts-list');
+    const alertElement = createAlertElement(alertData);
+    alertsList.insertBefore(alertElement, alertsList.firstChild);
+    
+    // Highlight the new alert
+    alertElement.classList.add('new-alert');
+    setTimeout(() => {
+        alertElement.classList.remove('new-alert');
+    }, 3000);
+}
+
+function createAlertElement(alert) {
+    const div = document.createElement('div');
+    div.className = `alert-item severity-${alert.severity.toLowerCase()}`;
+    div.dataset.severity = alert.severity;
+    div.dataset.resolved = 'false';
+    
+    div.innerHTML = `
+        <div class="alert-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="alert-content">
+            <div class="alert-header">
+                <span class="alert-severity badge-${alert.severity.toLowerCase()}">${alert.severity}</span>
+                <span class="alert-timestamp">${alert.timestamp}</span>
+                <span class="alert-status active">Active</span>
+            </div>
+            <div class="alert-message">${alert.message}</div>
+            <div class="alert-details">
+                <span class="alert-program">Program: ${alert.program_id}</span>
+            </div>
+        </div>
+        <div class="alert-actions">
+            <button class="btn btn-sm btn-secondary" onclick="viewAlert('${alert.id}')">
+                <i class="fas fa-eye"></i> View
+            </button>
+            <button class="btn btn-sm btn-success" onclick="resolveAlert('${alert.id}')">
+                <i class="fas fa-check"></i> Resolve
+            </button>
+        </div>
+    `;
+    
+    return div;
+}
+</script>
+{% endblock %} 

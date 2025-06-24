@@ -1,0 +1,250 @@
+# Solana Watchtower Configuration for Development and Testing on Devnet
+# This configuration is optimized for development with verbose logging and lower thresholds
+
+[network]
+cluster = "devnet"
+rpc_url = "https://api.devnet.solana.com"
+ws_url = "wss://api.devnet.solana.com"
+
+# Alternative devnet endpoints for testing
+# rpc_url = "https://devnet.genesysgo.net"
+# rpc_url = "https://rpc-devnet.solanalabs.com"
+
+[monitoring]
+# Smaller buffer for development
+event_buffer_size = 1000
+# More frequent evaluation for faster feedback
+rule_evaluation_interval = 10
+# Enable debug logging for development
+enable_debug_logs = true
+# More verbose WebSocket logging
+enable_websocket_debug = true
+
+# Test program - replace with your program address
+[[programs]]
+name = "test-program"
+address = "YourTestProgramAddressHere123456789"
+description = "Your test program for development"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true
+
+# Lower thresholds for testing
+[programs.filters]
+# Monitor very small transactions for testing
+min_transaction_value = 1000000  # 0.001 SOL in lamports
+# Monitor all instruction types during development
+instruction_types = []  # Empty = all types
+
+# SPL Token program for general testing
+[[programs]]
+name = "spl-token-devnet"
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+description = "SPL Token on devnet for testing token operations"
+
+monitor_accounts = true
+monitor_instructions = true
+monitor_logs = true
+
+[programs.filters]
+min_transaction_value = 100000  # 0.0001 SOL for testing
+
+# Development-friendly rules with low thresholds
+[[rules]]
+name = "any-large-transfer"
+type = "transaction_size"
+description = "Alert on any transfer > 0.1 SOL (for testing)"
+threshold = 100000000  # 0.1 SOL
+window = "1m"
+severity = "low"
+enabled = true
+
+[[rules]]
+name = "moderate-activity"
+type = "transaction_frequency"
+description = "Detect moderate activity for testing"
+threshold = 5  # 5 transactions per minute
+window = "1m"
+severity = "medium"
+enabled = true
+
+[[rules]]
+name = "any-failures"
+type = "failure_rate"
+description = "Alert on any instruction failures"
+threshold = 0.01  # 1% failure rate
+window = "5m"
+severity = "low"
+enabled = true
+
+# Test custom rule with very low threshold
+[[rules]]
+name = "test-oracle-deviation"
+type = "oracle_price_deviation"
+description = "Test oracle price monitoring"
+threshold = 0.05  # 5% deviation
+window = "2m"
+severity = "medium"
+enabled = false  # Enable when you have oracle data
+
+# Test liquidity monitoring
+[[rules]]
+name = "test-liquidity-drop"
+type = "liquidity_drop"
+description = "Test liquidity monitoring"
+threshold = 0.1  # 10% drop
+window = "1m"
+severity = "high"
+enabled = false  # Enable for DEX testing
+
+# Comprehensive notification setup for testing
+[notifications]
+# Small batches for immediate feedback
+batch_size = 3
+batch_timeout = 60  # 1 minute
+# Higher rate limit for testing
+rate_limit_per_hour = 1000
+
+# Console notifications (always on for development)
+[[notifications.channels]]
+name = "console-dev"
+type = "console"
+enabled = true
+# Show all severity levels during development
+[notifications.channels.filter]
+severity = ["critical", "high", "medium", "low", "debug"]
+
+# File logging for development
+[[notifications.channels]]
+name = "file-dev"
+type = "file"
+enabled = true
+file_path = "/app/logs/devnet-alerts.log"
+[notifications.channels.filter]
+severity = ["critical", "high", "medium", "low"]
+
+# Test email notifications (use a test email service)
+[[notifications.channels]]
+name = "test-email"
+type = "email"
+enabled = false  # Enable for email testing
+recipients = ["developer@example.com", "test@example.com"]
+[notifications.channels.filter]
+severity = ["critical", "high", "medium"]
+
+# Test Telegram notifications
+[[notifications.channels]]
+name = "test-telegram"
+type = "telegram"
+enabled = false  # Enable when testing Telegram integration
+chat_id = "your-test-chat-id"
+[notifications.channels.filter]
+severity = ["critical", "high", "medium", "low"]
+
+# Test Slack notifications
+[[notifications.channels]]
+name = "test-slack"
+type = "slack"
+enabled = false  # Enable for Slack testing
+webhook_url = "https://hooks.slack.com/services/TEST/HOOK/URL"
+channel = "#solana-alerts-test"
+[notifications.channels.filter]
+severity = ["critical", "high"]
+
+# Test Discord notifications
+[[notifications.channels]]
+name = "test-discord"
+type = "discord"
+enabled = false  # Enable for Discord testing
+webhook_url = "https://discord.com/api/webhooks/TEST/WEBHOOK"
+[notifications.channels.filter]
+severity = ["critical", "high", "medium"]
+
+# Enhanced metrics for development
+[metrics]
+enabled = true
+port = 9090
+# Keep metrics for shorter time in development
+retention_days = 1
+
+[metrics.prometheus]
+enabled = true
+# More granular buckets for development
+latency_buckets = [0.0001, 0.001, 0.01, 0.1, 1.0, 5.0]
+
+# Detailed histogram tracking
+[metrics.histograms]
+rule_evaluation_duration = true
+websocket_message_processing = true
+notification_delivery_time = true
+
+# Dashboard with development features
+[dashboard]
+enabled = true
+host = "0.0.0.0"
+port = 8080
+enable_websocket = true
+# Enable development endpoints
+enable_debug_endpoints = true
+# Show more detailed information
+show_detailed_metrics = true
+
+# Development security (less restrictive)
+[security]
+api_key = "dev-api-key-not-for-production"
+# Allow all origins in development
+cors_origins = ["*"]
+# Disable HTTPS requirement for development
+require_https = false
+
+# Verbose logging for development
+[logging]
+level = "debug"  # Show all logs
+targets = ["console", "file"]
+# Log file configuration
+file_path = "/app/logs/watchtower-devnet.log"
+rotation = "hourly"  # Rotate more frequently for development
+retention_days = 7
+
+# Development-specific log filters
+[logging.filters]
+# Show WebSocket events
+websocket_events = true
+# Show rule evaluation details
+rule_evaluation = true
+# Show notification processing
+notification_processing = true
+# Show metrics collection
+metrics_collection = true
+
+# Connection settings optimized for development
+[connection]
+# Shorter timeouts for faster feedback
+connection_timeout = 10
+request_timeout = 30
+# More aggressive retry for development
+max_retries = 10
+retry_delay = 1
+# Keep connection alive
+keepalive_timeout = 60
+
+# WebSocket specific settings
+[websocket]
+# Reconnect quickly during development
+reconnect_interval = 5
+max_reconnect_attempts = 50
+# Smaller ping interval for testing
+ping_interval = 30
+# More verbose WebSocket logging
+log_raw_messages = false  # Set to true for debugging WebSocket issues
+
+# Development tools integration
+[development]
+# Enable hot reloading of configuration
+hot_reload_config = true
+# Enable metrics export for testing
+export_metrics_json = true
+export_metrics_path = "/app/data/metrics.json"
+# Enable simulation mode for testing rules without real transactions
+simulation_mode = false 
