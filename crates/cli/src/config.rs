@@ -258,8 +258,16 @@ mod tests {
             ws_url = "wss://api.mainnet-beta.solana.com"
 
             [[programs]]
-            id = "TokenkegQfeGuoRqH9L4g1hxgCaLJaFgqhk5eHwUfVR"
+            id = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             name = "SPL Token"
+
+            [email]
+            smtp_server = "smtp.example.com"
+            smtp_port = 587
+            username = "test@example.com"
+            password = "test_password"
+            from_address = "alerts@example.com"
+            to_addresses = ["admin@example.com"]
 
             [dashboard]
             enabled = true

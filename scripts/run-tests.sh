@@ -17,11 +17,11 @@ cargo clippy --all-targets --all-features -- -D warnings
 
 # 3. Run unit and integration tests
 echo "\n🧪 Running tests with 'cargo test'..."
-cargo test --verbose
+cargo test --verbose --workspace
 
 # 4. Build the release version to ensure it compiles
 echo "\n📦 Building release version with 'cargo build'..."
-cargo build --release --verbose
+cargo build --release --verbose --workspace
 
 # Announce completion
 echo "\n✅ All checks passed successfully!" 

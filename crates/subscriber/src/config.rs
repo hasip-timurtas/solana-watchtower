@@ -1,9 +1,19 @@
 //! Configuration structures for the subscriber module.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
 use std::time::Duration;
 use url::Url;
+
+// Custom deserializer for Pubkey from string
+fn deserialize_pubkey<'de, D>(deserializer: D) -> Result<Pubkey, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Pubkey::from_str(&s).map_err(serde::de::Error::custom)
+}
 
 /// Configuration for the subscriber module.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,6 +48,7 @@ pub struct SubscriberConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgramConfig {
     /// Program public key
+    #[serde(deserialize_with = "deserialize_pubkey")]
     pub id: Pubkey,
 
     /// Human-readable name for the program
