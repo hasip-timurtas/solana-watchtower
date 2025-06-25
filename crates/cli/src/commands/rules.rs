@@ -3,9 +3,10 @@ use console::style;
 use solana_sdk::pubkey::Pubkey;
 use std::str::FromStr;
 use watchtower_engine::{
-    EventData, EventType, FailureRateRule, LargeTransactionRule, LiquidityDropRule,
-    OracleDeviationRule, ProgramEvent, Rule, RuleContext,
+    FailureRateRule, LargeTransactionRule, LiquidityDropRule, OracleDeviationRule, Rule,
+    RuleContext,
 };
+use watchtower_subscriber::{EventData, EventType, ProgramEvent};
 
 pub async fn rules_list_command() -> Result<()> {
     println!("{}", style("Available Monitoring Rules:").bold());
