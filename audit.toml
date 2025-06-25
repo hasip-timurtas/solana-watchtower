@@ -1,0 +1,18 @@
+[advisories]
+# Ignore security vulnerabilities that are unavoidable due to Solana ecosystem dependencies
+# These would require upgrading to Solana 2.x which is a major breaking change
+
+ignore = [
+    "RUSTSEC-2024-0344",  # curve25519-dalek timing variability - fixed in Solana 2.x
+    "RUSTSEC-2022-0093",  # ed25519-dalek double public key signing oracle attack
+    "RUSTSEC-2025-0009",  # ring AES functions may panic - low impact
+]
+
+[database]
+# Update the advisory database automatically
+fetch = true
+
+[output]
+# Show detailed information about vulnerabilities
+format = "human"
+show-stats = true 
