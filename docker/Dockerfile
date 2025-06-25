@@ -35,6 +35,9 @@ RUN rm -rf crates/*/src
 COPY crates/ ./crates/
 COPY configs/ ./configs/
 
+# Clean any previous build artifacts to avoid conflicts
+RUN cargo clean
+
 # Build application
 RUN cargo build --release --bins
 
@@ -56,11 +59,12 @@ RUN useradd -r -s /bin/false watchtower
 WORKDIR /app
 
 # Copy binaries from builder
-COPY --from=builder /app/target/release/watchtower-cli /usr/local/bin/
-COPY --from=builder /app/target/release/watchtower-dashboard /usr/local/bin/
+COPY --from=builder /app/target/release/watchtower /usr/local/bin/
+
+# Copy configuration files
+COPY --from=builder /app/configs/ /app/configs/
 
 # Copy configuration and templates
-COPY --from=builder /app/configs/ ./configs/
 COPY --from=builder /app/crates/notifier/templates/ ./templates/
 COPY --from=builder /app/crates/dashboard/templates/ ./dashboard/templates/
 COPY --from=builder /app/crates/dashboard/static/ ./dashboard/static/

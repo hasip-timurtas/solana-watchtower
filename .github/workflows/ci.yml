@@ -109,7 +109,6 @@ jobs:
         file: ./docker/Dockerfile
         push: false
         tags: solana-watchtower:latest
-        no-cache: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
