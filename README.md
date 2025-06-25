@@ -375,4 +375,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **⚠️ Important**: Solana Watchtower is a monitoring tool that helps detect potential issues but does not guarantee complete security. Always conduct thorough testing and consider professional security audits for production applications.
 
-**Built with ❤️ for the Solana ecosystem**
+**Built with ❤️ by Hasip Timurtas for the Solana ecosystem***
