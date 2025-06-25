@@ -16,16 +16,16 @@ use tracing::info;
 // Helper function to format duration
 fn format_duration(duration: chrono::Duration) -> String {
     let total_seconds = duration.num_seconds();
-    
+
     if total_seconds < 0 {
         return "0s".to_string();
     }
-    
+
     let days = total_seconds / 86400;
     let hours = (total_seconds % 86400) / 3600;
     let minutes = (total_seconds % 3600) / 60;
     let seconds = total_seconds % 60;
-    
+
     if days > 0 {
         format!("{}d {}h {}m", days, hours, minutes)
     } else if hours > 0 {
@@ -156,7 +156,7 @@ pub async fn rules_page(State(state): State<AppState>) -> DashboardResult<Html<S
 /// Settings page
 pub async fn settings_page(State(state): State<AppState>) -> DashboardResult<Html<String>> {
     let dashboard_state = state.dashboard_state.read().await;
-    
+
     let template = SettingsTemplate {
         title: "Settings".to_string(),
         notification_channels: dashboard_state.notification_channels.clone(),
@@ -329,7 +329,7 @@ pub async fn api_programs(State(_state): State<AppState>) -> Json<ApiResponse<Ve
 /// API: Get configuration
 pub async fn api_config(State(state): State<AppState>) -> Json<ApiResponse<ConfigInfo>> {
     let dashboard_state = state.dashboard_state.read().await;
-    
+
     let config = ConfigInfo {
         notification_channels: dashboard_state.notification_channels.clone(),
         monitoring_settings: dashboard_state.monitoring_settings.clone(),
@@ -344,19 +344,19 @@ pub async fn api_update_config(
     Json(config): Json<ConfigUpdateRequest>,
 ) -> Json<ApiResponse<String>> {
     info!("Configuration update requested: {:?}", config);
-    
+
     let mut dashboard_state = state.dashboard_state.write().await;
-    
+
     // Update notification channels if provided
     if let Some(channels) = config.notification_channels {
         dashboard_state.notification_channels = channels;
     }
-    
+
     // Update monitoring settings if provided
     if let Some(settings) = config.monitoring_settings {
         dashboard_state.monitoring_settings = settings;
     }
-    
+
     info!("Configuration updated successfully");
     Json(ApiResponse::success(
         "Configuration updated successfully".to_string(),

@@ -226,7 +226,7 @@ async fn start_dashboard(
 
     // Create and start dashboard server
     let dashboard = DashboardServer::new(dashboard_config, engine, alert_manager, metrics);
-    
+
     dashboard
         .start()
         .await
