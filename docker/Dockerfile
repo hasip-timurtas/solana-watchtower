@@ -1,5 +1,5 @@
 # Multi-stage build for Solana Watchtower
-FROM rust:1.75-bullseye as builder
+FROM rust:1.83-bullseye as builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
