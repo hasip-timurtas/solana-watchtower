@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Git pre-push hook for Solana Watchtower
+# This hook runs the full test suite before allowing a push
+
+echo "🚀 Running pre-push checks..."
+
+# Run the test script
+if ! ./scripts/run-tests.sh; then
+    echo "❌ Pre-push checks failed. Push aborted."
+    exit 1
+fi
+
+echo "✅ Pre-push checks passed. Proceeding with push..."
+exit 0 

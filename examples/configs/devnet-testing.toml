@@ -27,6 +27,71 @@ monitor_accounts = true
 monitor_transactions = true
 monitor_logs = true
 
+# Popular programs for testing - these have high activity on devnet
+[[programs]]
+id = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+name = "Metaplex Token Metadata"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
+name = "Jupiter Aggregator V6"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+name = "Raydium AMM"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+name = "Serum DEX V3"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
+name = "Pyth Oracle Program"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+name = "Orca Whirlpools"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+# Additional high-activity programs
+[[programs]]
+id = "Vote111111111111111111111111111111111111111"
+name = "Vote Program"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "Stake11111111111111111111111111111111111111"
+name = "Stake Program"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
+[[programs]]
+id = "ComputeBudget111111111111111111111111111111"
+name = "Compute Budget Program"
+monitor_accounts = true
+monitor_transactions = true
+monitor_logs = true
+
 # Add your test program here:
 # [[programs]]
 # id = "YourTestProgramAddressHere123456789"
@@ -35,11 +100,11 @@ monitor_logs = true
 # monitor_transactions = true
 # monitor_logs = true
 
-# Subscription filters optimized for development
-include_failed = false
-include_votes = false
-max_transactions_per_notification = 10
-commitment = "confirmed"
+# Subscription filters optimized for development - more permissive for testing
+include_failed = true
+include_votes = true
+max_transactions_per_notification = 50
+commitment = "processed"
 
 # Email notifications (required - primary notification channel)
 [email]
@@ -51,10 +116,10 @@ from_address = "alerts@example.com"
 to_addresses = ["developer@example.com", "test@example.com"]
 use_tls = true
 
-# Development-friendly rate limiting
+# Development-friendly rate limiting - increased for testing
 [rate_limiting]
-max_messages_per_minute = 30
-burst_size = 10
+max_messages_per_minute = 100
+burst_size = 50
 enabled = true
 
 # Global notification settings for development

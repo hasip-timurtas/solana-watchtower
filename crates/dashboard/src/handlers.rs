@@ -470,7 +470,7 @@ pub struct ProgramInfo {
 }
 
 // Re-export types from lib.rs for convenience
-pub use crate::{NotificationChannel, MonitoringSettings};
+pub use crate::{MonitoringSettings, NotificationChannel};
 
 #[derive(Debug, Serialize)]
 pub struct ConfigInfo {
