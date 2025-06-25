@@ -1,6 +1,6 @@
 # Scripts Directory
 
-This directory contains automation scripts for **solsec** development and version management.
+This directory contains automation scripts for **Solana Watchtower** development and version management.
 
 ## Available Scripts
 
@@ -30,7 +30,6 @@ This directory contains automation scripts for **solsec** development and versio
 
 **Features**:
 - Updates version in `Cargo.toml` and `Cargo.lock`
-- Updates UI version in `ui/package.json` and `ui/src/App.tsx`
 - Updates documentation references
 - Validates semantic versioning format
 - Provides colored output and verification
@@ -43,22 +42,18 @@ This directory contains automation scripts for **solsec** development and versio
 # The script will update:
 # - Cargo.toml (main version)
 # - Cargo.lock (via cargo check)
-# - ui/package.json (UI package version)
-# - ui/src/App.tsx (mock data version)
-# - .cursor/rules/rules.mdc (documentation)
+# - Documentation files
 ```
 
 **Version Format**: Follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
 
 **Example Output**:
 ```
-[INFO] Current version: 0.1.7
+[INFO] Current version: 0.1.0
 [INFO] New version: 0.2.0
 [INFO] Starting version update process...
 [SUCCESS] Updated Cargo.toml
 [SUCCESS] Updated Cargo.lock
-[SUCCESS] Updated ui/package.json
-[SUCCESS] Updated ui/src/App.tsx
 [SUCCESS] Version successfully updated to 0.2.0!
 ```
 
@@ -114,4 +109,4 @@ When modifying scripts:
 
 ---
 
-For more information, see the main [README.md](../README.md) or [project documentation](../rules.md). 
+For more information, see the main [README.md](../README.md) or [project documentation](../SECURITY.md). 
