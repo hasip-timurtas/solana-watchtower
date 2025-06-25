@@ -1,27 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} - Solana Watchtower</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>{{ title }}</h1>
-            <nav>
-                <a href="/">Dashboard</a>
-                <a href="/alerts">Alerts</a>
-                <a href="/metrics">Metrics</a>
-                <a href="/rules">Rules</a>
-                <a href="/settings" class="active">Settings</a>
-            </nav>
-        </header>
+{% extends "base.html" %}
 
-        <main>
-            <div class="settings-container">
-                <h2>System Settings</h2>
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-sliders-h"></i> Settings</h1>
+</div>
+
+<div class="settings-container">
+    <h2>System Settings</h2>
                 
                 <div class="settings-section">
                     <h3>Notification Channels</h3>
@@ -98,9 +83,339 @@
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+{% endblock %}
 
-    <script src="/static/app.js"></script>
-</body>
-</html> 
+{% block scripts %}
+<script>
+// Settings page functionality
+
+// Configure notification channel
+function configureChannel(channelName) {
+    const modal = createConfigModal(channelName);
+    document.body.appendChild(modal);
+}
+
+// Add new notification channel
+function addChannel() {
+    const modal = createAddChannelModal();
+    document.body.appendChild(modal);
+}
+
+// Toggle channel enabled/disabled
+function toggleChannel(channelName, enabled) {
+    // Get current config, update the channel, and save
+    fetch('/api/config')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update the specific channel
+            const channels = data.data.notification_channels.map(channel => {
+                if (channel.name === channelName) {
+                    return { ...channel, enabled: enabled, status: enabled ? 'Active' : 'Disabled' };
+                }
+                return channel;
+            });
+            
+            // Send update request
+            return fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    notification_channels: channels
+                })
+            });
+        } else {
+            throw new Error(data.error || 'Failed to get current config');
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            dashboard.showNotification('Channel ' + (enabled ? 'enabled' : 'disabled'), 'success');
+            location.reload();
+        } else {
+            dashboard.showNotification('Failed to update channel: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating channel:', error);
+        dashboard.showNotification('Error updating channel', 'error');
+    });
+}
+
+// Save monitoring settings
+function saveSettings() {
+    const form = document.querySelector('.settings-form');
+    const formData = new FormData(form);
+    
+    const settings = {
+        monitoring_settings: {
+            max_events_per_minute: parseInt(formData.get('max-events')),
+            alert_retention_days: parseInt(formData.get('retention-days')),
+            enable_real_time_alerts: formData.get('real-time-alerts') === 'on'
+        }
+    };
+    
+    fetch('/api/config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            dashboard.showNotification('Settings saved successfully', 'success');
+        } else {
+            dashboard.showNotification('Failed to save settings: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving settings:', error);
+        dashboard.showNotification('Error saving settings', 'error');
+    });
+}
+
+// Create configuration modal
+function createConfigModal(channelName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Configure ${channelName}</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                ${getChannelConfigForm(channelName)}
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveChannelConfig('${channelName}')">Save</button>
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
+    return modal;
+}
+
+// Create add channel modal
+function createAddChannelModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Notification Channel</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="channel-type">Channel Type</label>
+                    <select id="channel-type" onchange="updateChannelForm()">
+                        <option value="">Select a channel type...</option>
+                        <option value="email">Email</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="slack">Slack</option>
+                        <option value="discord">Discord</option>
+                    </select>
+                </div>
+                <div id="channel-config-form"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="addNewChannel()">Add Channel</button>
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
+    return modal;
+}
+
+// Get configuration form for specific channel
+function getChannelConfigForm(channelName) {
+    switch (channelName.toLowerCase()) {
+        case 'email':
+            return `
+                <div class="form-group">
+                    <label for="smtp-server">SMTP Server</label>
+                    <input type="text" id="smtp-server" placeholder="smtp.gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="smtp-port">SMTP Port</label>
+                    <input type="number" id="smtp-port" value="587" required>
+                </div>
+                <div class="form-group">
+                    <label for="email-username">Username</label>
+                    <input type="email" id="email-username" placeholder="your-email@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="email-password">Password</label>
+                    <input type="password" id="email-password" placeholder="App password" required>
+                </div>
+                <div class="form-group">
+                    <label for="from-address">From Address</label>
+                    <input type="email" id="from-address" placeholder="alerts@yourdomain.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="to-addresses">To Addresses (comma separated)</label>
+                    <input type="text" id="to-addresses" placeholder="admin@yourdomain.com, dev@yourdomain.com" required>
+                </div>
+            `;
+        case 'telegram':
+            return `
+                <div class="form-group">
+                    <label for="bot-token">Bot Token</label>
+                    <input type="text" id="bot-token" placeholder="1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi" required>
+                </div>
+                <div class="form-group">
+                    <label for="chat-id">Chat ID</label>
+                    <input type="text" id="chat-id" placeholder="-1001234567890" required>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="disable-preview">
+                        Disable web page preview
+                    </label>
+                </div>
+            `;
+        case 'slack':
+            return `
+                <div class="form-group">
+                    <label for="webhook-url">Webhook URL</label>
+                    <input type="url" id="webhook-url" placeholder="https://hooks.slack.com/services/..." required>
+                </div>
+                <div class="form-group">
+                    <label for="channel">Channel</label>
+                    <input type="text" id="channel" placeholder="#solana-alerts" required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Solana Watchtower">
+                </div>
+            `;
+        case 'discord':
+            return `
+                <div class="form-group">
+                    <label for="webhook-url">Webhook URL</label>
+                    <input type="url" id="webhook-url" placeholder="https://discord.com/api/webhooks/..." required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Solana Watchtower">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="use-embeds" checked>
+                        Use embeds for rich formatting
+                    </label>
+                </div>
+            `;
+        default:
+            return '<p>Configuration form not available for this channel type.</p>';
+    }
+}
+
+// Update channel form when type is selected
+function updateChannelForm() {
+    const channelType = document.getElementById('channel-type').value;
+    const formContainer = document.getElementById('channel-config-form');
+    
+    if (channelType) {
+        formContainer.innerHTML = getChannelConfigForm(channelType);
+    } else {
+        formContainer.innerHTML = '';
+    }
+}
+
+// Save channel configuration
+function saveChannelConfig(channelName) {
+    // Collect form data based on channel type
+    const formData = {};
+    const modal = event.target.closest('.modal-overlay');
+    
+    // Get all form inputs
+    const inputs = modal.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            formData[input.id] = input.checked;
+        } else if (input.value) {
+            formData[input.id] = input.value;
+        }
+    });
+    
+    // For now, just show a message that config would be saved
+    dashboard.showNotification('Channel configuration saved (demo mode)', 'success');
+    modal.remove();
+    
+    console.log('Channel config for ' + channelName + ':', formData);
+}
+
+// Add new channel
+function addNewChannel() {
+    const channelType = document.getElementById('channel-type').value;
+    if (!channelType) {
+        dashboard.showNotification('Please select a channel type', 'warning');
+        return;
+    }
+    
+    saveChannelConfig(channelType);
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Settings form submission
+    const settingsForm = document.querySelector('.settings-form');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveSettings();
+        });
+    }
+    
+    // Channel toggles
+    document.querySelectorAll('.toggle input[type="checkbox"]').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const channelName = this.closest('.channel-item').querySelector('h4').textContent;
+            toggleChannel(channelName, this.checked);
+        });
+    });
+    
+    // Configure buttons
+    document.querySelectorAll('button').forEach(btn => {
+        if (btn.textContent.trim() === 'Configure') {
+            btn.addEventListener('click', function() {
+                const channelName = this.closest('.channel-item').querySelector('h4').textContent;
+                configureChannel(channelName);
+            });
+        }
+    });
+    
+    // Add channel button
+    document.querySelectorAll('button').forEach(btn => {
+        if (btn.textContent.trim() === 'Add Channel') {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                addChannel();
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -12,7 +12,7 @@ use watchtower_subscriber::SolanaWebSocketClient;
 pub async fn start_command(
     config_path: PathBuf,
     daemon: bool,
-    dashboard_port: u16,
+    dashboard_port: Option<u16>,
     metrics_port: u16,
 ) -> Result<()> {
     println!("{}", style("Loading configuration...").cyan());
@@ -21,8 +21,10 @@ pub async fn start_command(
     let mut config = AppConfig::load_with_overrides(&config_path)
         .with_context(|| format!("Failed to load config from {}", config_path.display()))?;
 
-    // Override ports from command line
-    config.dashboard.port = dashboard_port;
+    // Override ports from command line if provided
+    if let Some(port) = dashboard_port {
+        config.dashboard.port = port;
+    }
 
     println!("{}", style("✓ Configuration loaded successfully").green());
 
@@ -204,18 +206,33 @@ async fn register_builtin_rules(engine: &MonitoringEngine) -> Result<()> {
 }
 
 async fn start_dashboard(
-    _config: crate::config::DashboardConfig,
-    _engine: Arc<MonitoringEngine>,
-    _alert_manager: Arc<AlertManager>,
+    config: crate::config::DashboardConfig,
+    engine: Arc<MonitoringEngine>,
+    alert_manager: Arc<AlertManager>,
 ) -> Result<()> {
-    // Dashboard implementation would go here
-    // For now, we'll just log that it's started
-    info!("Dashboard server started (implementation pending)");
+    use watchtower_dashboard::{DashboardConfig as DashConfig, DashboardServer};
+    use watchtower_engine::MetricsCollector;
 
-    // Keep the task alive
-    loop {
-        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
-    }
+    // Create metrics collector for dashboard
+    let metrics = Arc::new(MetricsCollector::new().context("Failed to create metrics collector")?);
+
+    // Convert CLI config to dashboard config
+    let dashboard_config = DashConfig {
+        host: config.host,
+        port: config.port,
+        enable_cors: config.enable_cors,
+        static_dir: config.static_dir,
+    };
+
+    // Create and start dashboard server
+    let dashboard = DashboardServer::new(dashboard_config, engine, alert_manager, metrics);
+    
+    dashboard
+        .start()
+        .await
+        .context("Failed to start dashboard server")?;
+
+    Ok(())
 }
 
 async fn start_metrics_server(metrics: Arc<MetricsCollector>, port: u16) -> Result<()> {

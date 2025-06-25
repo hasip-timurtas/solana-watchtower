@@ -30,6 +30,7 @@ validator = { workspace = true }
 watchtower-subscriber = { path = "../subscriber" }
 watchtower-engine = { path = "../engine" }
 watchtower-notifier = { path = "../notifier" }
+watchtower-dashboard = { path = "../dashboard" }
 
 # Additional dependencies
 console = "0.15"

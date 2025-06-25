@@ -40,9 +40,9 @@ enum Commands {
         #[arg(short, long)]
         daemon: bool,
 
-        /// Dashboard port
-        #[arg(long, default_value = "8080")]
-        dashboard_port: u16,
+        /// Dashboard port (overrides config file)
+        #[arg(long)]
+        dashboard_port: Option<u16>,
 
         /// Prometheus metrics port
         #[arg(long, default_value = "9090")]

@@ -286,25 +286,36 @@ class WatchtowerDashboard {
         // Update Chart.js charts if they exist
         Object.values(this.charts).forEach(chart => {
             if (chart && typeof chart.update === 'function') {
-                // Add new data point
-                const now = new Date(metricsData.timestamp * 1000);
-                chart.data.labels.push(now.toLocaleTimeString());
-                
-                chart.data.datasets.forEach((dataset, index) => {
-                    const metricName = dataset.label.toLowerCase().replace(/\s+/g, '_');
-                    const value = metricsData.metrics[metricName] || 0;
-                    dataset.data.push(value);
-                });
-                
-                // Keep only last 20 data points
-                if (chart.data.labels.length > 20) {
-                    chart.data.labels.shift();
-                    chart.data.datasets.forEach(dataset => {
-                        dataset.data.shift();
+                try {
+                    // Add new data point
+                    const now = new Date(metricsData.timestamp * 1000);
+                    
+                    // Prevent duplicate timestamps
+                    if (chart.data.labels.length > 0 && 
+                        chart.data.labels[chart.data.labels.length - 1] === now.toLocaleTimeString()) {
+                        return;
+                    }
+                    
+                    chart.data.labels.push(now.toLocaleTimeString());
+                    
+                    chart.data.datasets.forEach((dataset, index) => {
+                        const metricName = dataset.label.toLowerCase().replace(/\s+/g, '_');
+                        const value = metricsData.metrics[metricName] || 0;
+                        dataset.data.push(value);
                     });
+                    
+                    // Keep only last 20 data points
+                    if (chart.data.labels.length > 20) {
+                        chart.data.labels.shift();
+                        chart.data.datasets.forEach(dataset => {
+                            dataset.data.shift();
+                        });
+                    }
+                    
+                    chart.update('none'); // No animation for real-time updates
+                } catch (error) {
+                    console.error('Error updating chart:', error);
                 }
-                
-                chart.update('none'); // No animation for real-time updates
             }
         });
     }

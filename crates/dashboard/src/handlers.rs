@@ -13,11 +13,38 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::info;
 
+// Helper function to format duration
+fn format_duration(duration: chrono::Duration) -> String {
+    let total_seconds = duration.num_seconds();
+    
+    if total_seconds < 0 {
+        return "0s".to_string();
+    }
+    
+    let days = total_seconds / 86400;
+    let hours = (total_seconds % 86400) / 3600;
+    let minutes = (total_seconds % 3600) / 60;
+    let seconds = total_seconds % 60;
+    
+    if days > 0 {
+        format!("{}d {}h {}m", days, hours, minutes)
+    } else if hours > 0 {
+        format!("{}h {}m", hours, minutes)
+    } else if minutes > 0 {
+        format!("{}m {}s", minutes, seconds)
+    } else {
+        format!("{}s", seconds)
+    }
+}
+
 /// Dashboard index page
 pub async fn index(State(state): State<AppState>) -> DashboardResult<Html<String>> {
     let engine_state = state.engine.state().await;
     let alert_stats = state.alert_manager.statistics().await;
     let active_rules = state.engine.list_rules().await.len();
+
+    let uptime_duration = chrono::Utc::now() - engine_state.start_time;
+    let uptime_formatted = format_duration(uptime_duration);
 
     let template = IndexTemplate {
         title: "Solana Watchtower Dashboard".to_string(),
@@ -28,7 +55,7 @@ pub async fn index(State(state): State<AppState>) -> DashboardResult<Html<String
         },
         alert_count: alert_stats.total_alerts as usize,
         active_rules,
-        uptime: format!("{}s", engine_state.start_time.timestamp()),
+        uptime: uptime_formatted,
     };
 
     let html = template.render().map_err(DashboardError::Template)?;
@@ -127,26 +154,12 @@ pub async fn rules_page(State(state): State<AppState>) -> DashboardResult<Html<S
 }
 
 /// Settings page
-pub async fn settings_page(State(_state): State<AppState>) -> DashboardResult<Html<String>> {
+pub async fn settings_page(State(state): State<AppState>) -> DashboardResult<Html<String>> {
+    let dashboard_state = state.dashboard_state.read().await;
+    
     let template = SettingsTemplate {
         title: "Settings".to_string(),
-        notification_channels: vec![
-            NotificationChannel {
-                name: "Email".to_string(),
-                enabled: true,
-                status: "Active".to_string(),
-            },
-            NotificationChannel {
-                name: "Telegram".to_string(),
-                enabled: true,
-                status: "Active".to_string(),
-            },
-            NotificationChannel {
-                name: "Slack".to_string(),
-                enabled: false,
-                status: "Disabled".to_string(),
-            },
-        ],
+        notification_channels: dashboard_state.notification_channels.clone(),
     };
 
     let html = template.render().map_err(DashboardError::Template)?;
@@ -314,26 +327,12 @@ pub async fn api_programs(State(_state): State<AppState>) -> Json<ApiResponse<Ve
 }
 
 /// API: Get configuration
-pub async fn api_config(State(_state): State<AppState>) -> Json<ApiResponse<ConfigInfo>> {
-    // TODO: Load actual configuration
+pub async fn api_config(State(state): State<AppState>) -> Json<ApiResponse<ConfigInfo>> {
+    let dashboard_state = state.dashboard_state.read().await;
+    
     let config = ConfigInfo {
-        notification_channels: vec![
-            NotificationChannel {
-                name: "Email".to_string(),
-                enabled: true,
-                status: "Active".to_string(),
-            },
-            NotificationChannel {
-                name: "Telegram".to_string(),
-                enabled: true,
-                status: "Active".to_string(),
-            },
-        ],
-        monitoring_settings: MonitoringSettings {
-            max_events_per_minute: 1000,
-            alert_retention_days: 30,
-            enable_real_time_alerts: true,
-        },
+        notification_channels: dashboard_state.notification_channels.clone(),
+        monitoring_settings: dashboard_state.monitoring_settings.clone(),
     };
 
     Json(ApiResponse::success(config))
@@ -341,11 +340,24 @@ pub async fn api_config(State(_state): State<AppState>) -> Json<ApiResponse<Conf
 
 /// API: Update configuration
 pub async fn api_update_config(
-    State(_state): State<AppState>,
+    State(state): State<AppState>,
     Json(config): Json<ConfigUpdateRequest>,
 ) -> Json<ApiResponse<String>> {
-    // TODO: Implement configuration updates
     info!("Configuration update requested: {:?}", config);
+    
+    let mut dashboard_state = state.dashboard_state.write().await;
+    
+    // Update notification channels if provided
+    if let Some(channels) = config.notification_channels {
+        dashboard_state.notification_channels = channels;
+    }
+    
+    // Update monitoring settings if provided
+    if let Some(settings) = config.monitoring_settings {
+        dashboard_state.monitoring_settings = settings;
+    }
+    
+    info!("Configuration updated successfully");
     Json(ApiResponse::success(
         "Configuration updated successfully".to_string(),
     ))
@@ -457,19 +469,8 @@ pub struct ProgramInfo {
     pub last_activity: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct NotificationChannel {
-    pub name: String,
-    pub enabled: bool,
-    pub status: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct MonitoringSettings {
-    pub max_events_per_minute: u32,
-    pub alert_retention_days: u32,
-    pub enable_real_time_alerts: bool,
-}
+// Re-export types from lib.rs for convenience
+pub use crate::{NotificationChannel, MonitoringSettings};
 
 #[derive(Debug, Serialize)]
 pub struct ConfigInfo {

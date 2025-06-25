@@ -139,16 +139,39 @@ function resolveAlert(alertId) {
     }
 }
 
-// Connect to WebSocket for real-time alert updates
-const ws = new WebSocket(`ws://${window.location.host}/ws`);
-
-ws.onmessage = function(event) {
-    const message = JSON.parse(event.data);
-    if (message.type === 'Alert') {
-        // Add new alert to the top of the list
-        addNewAlert(message.data);
+// Connect to WebSocket for real-time alert updates with error handling
+let alertWs;
+function connectAlertsWebSocket() {
+    try {
+        alertWs = new WebSocket(`ws://${window.location.host}/ws`);
+        
+        alertWs.onmessage = function(event) {
+            try {
+                const message = JSON.parse(event.data);
+                if (message.type === 'Alert') {
+                    // Add new alert to the top of the list
+                    addNewAlert(message.data);
+                }
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+            }
+        };
+        
+        alertWs.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+        
+        alertWs.onclose = function() {
+            console.log('WebSocket connection closed, attempting reconnect...');
+            setTimeout(connectAlertsWebSocket, 5000);
+        };
+    } catch (error) {
+        console.error('Failed to connect WebSocket:', error);
+        setTimeout(connectAlertsWebSocket, 5000);
     }
-};
+}
+
+connectAlertsWebSocket();
 
 function addNewAlert(alertData) {
     const alertsList = document.querySelector('.alerts-list');

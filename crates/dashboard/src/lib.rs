@@ -7,6 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::SocketAddr, sync::Arc};
+use tokio::sync::RwLock;
 use tokio::net::TcpListener;
 use tower_http::{
     cors::CorsLayer,
@@ -43,13 +44,66 @@ impl Default for DashboardConfig {
     }
 }
 
+/// Notification channel configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationChannel {
+    pub name: String,
+    pub enabled: bool,
+    pub status: String,
+}
+
+/// Monitoring settings configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MonitoringSettings {
+    pub max_events_per_minute: u32,
+    pub alert_retention_days: u32,
+    pub enable_real_time_alerts: bool,
+}
+
+/// Dashboard configuration state
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DashboardState {
+    pub notification_channels: Vec<NotificationChannel>,
+    pub monitoring_settings: MonitoringSettings,
+}
+
+impl Default for DashboardState {
+    fn default() -> Self {
+        Self {
+            notification_channels: vec![
+                NotificationChannel {
+                    name: "Email".to_string(),
+                    enabled: true,
+                    status: "Active".to_string(),
+                },
+                NotificationChannel {
+                    name: "Telegram".to_string(),
+                    enabled: true,
+                    status: "Active".to_string(),
+                },
+                NotificationChannel {
+                    name: "Slack".to_string(),
+                    enabled: false,
+                    status: "Disabled".to_string(),
+                },
+            ],
+            monitoring_settings: MonitoringSettings {
+                max_events_per_minute: 1000,
+                alert_retention_days: 30,
+                enable_real_time_alerts: true,
+            },
+        }
+    }
+}
+
 /// Shared application state
 #[derive(Clone)]
 pub struct AppState {
     pub engine: Arc<MonitoringEngine>,
     pub alert_manager: Arc<AlertManager>,
     pub metrics: Arc<MetricsCollector>,
-    pub ws_connections: Arc<tokio::sync::RwLock<HashMap<String, WebSocketConnection>>>,
+    pub ws_connections: Arc<RwLock<HashMap<String, WebSocketConnection>>>,
+    pub dashboard_state: Arc<RwLock<DashboardState>>,
 }
 
 /// Dashboard server
@@ -70,7 +124,8 @@ impl DashboardServer {
             engine,
             alert_manager,
             metrics,
-            ws_connections: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            ws_connections: Arc::new(RwLock::new(HashMap::new())),
+            dashboard_state: Arc::new(RwLock::new(DashboardState::default())),
         };
 
         Self { config, state }
