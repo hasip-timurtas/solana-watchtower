@@ -1,7 +1,7 @@
 # Development Dockerfile for Solana Watchtower
 # Optimized for development with hot reloading and debugging tools
 
-FROM rust:1.83-bullseye
+FROM rustlang/rust:nightly-bullseye
 
 # Install system dependencies and development tools
 RUN apt-get update && apt-get install -y \
